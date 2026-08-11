@@ -1,4 +1,6 @@
-# Thiết kế: Hệ thống đặt vé xem phim — Core Booking (Phase 1)
+# cinebook — Thiết kế Core Booking (Phase 1)
+
+Hệ thống đặt vé xem phim.
 
 - **Ngày:** 2026-08-11
 - **Phạm vi:** Phase 1 — core booking engine. AI Agent hội thoại là Phase 2, có spec riêng.
@@ -52,16 +54,16 @@ Những thứ sau bị loại bỏ có chủ đích. Chúng không thêm chiều
 │  web (UI)   │──────────────┐
 │ seat map    │              ▼
 └─────────────┘      ┌──────────────────────────────┐
-                     │   booking-api (monolith)     │
-   cổng thanh toán   │  identity │ catalog │ booking│
-   ──── webhook ────▶│  payment  │ notification     │
-                     └───┬──────────┬────────┬──────┘
+                     │   cinebook-api (monolith)    │
+   cổng thanh toán   │  identity │ catalog │ booking │
+   ──── webhook ────▶│  payment  │ notification      │
+                     └───┬──────────┬────────┬───────┘
                          │          │        │
                   Postgres 16   Redis 7   Kafka (outbox relay)
                     (SoT)      (cache+   ──────┬──────
                                pub/sub)        ▼
                                       ┌──────────────────┐
-                                      │ booking-worker   │
+                                      │ cinebook-worker  │
                                       │ • hold sweeper   │
                                       │ • email/notify   │
                                       │ • payment recon  │
@@ -71,23 +73,25 @@ Những thứ sau bị loại bỏ có chủ đích. Chúng không thêm chiều
 
 Hai deployable:
 
-- **`booking-api`** — phục vụ mọi request đồng bộ (REST + WebSocket). Không chạy scheduled job nào.
-- **`booking-worker`** — không nhận HTTP request nào. Chỉ tiêu thụ Kafka và chạy scheduled job.
+- **`cinebook-api`** — phục vụ mọi request đồng bộ (REST + WebSocket). Không chạy scheduled job nào.
+- **`cinebook-worker`** — không nhận HTTP request nào. Chỉ tiêu thụ Kafka và chạy scheduled job.
 
 Ranh giới này có ý nghĩa vận hành cụ thể: **worker chết thì hệ thống vẫn bán được vé**, chỉ mất tính kịp thời của việc dọn dẹp và gửi thông báo. Tính đúng đắn không phụ thuộc vào worker (xem mục 6.2).
 
 ### 2.2 Cấu trúc Maven
 
 ```
-cinema-booking/
+cinebook/
 ├── pom.xml                 parent, quản lý version
 ├── common/                 domain event contract, shared DTO
-├── booking-api/            monolith module hoá
-├── booking-worker/         Kafka consumer + scheduled job
+├── cinebook-api/           monolith module hoá
+├── cinebook-worker/        Kafka consumer + scheduled job
 ├── web/                    UI tối giản
 ├── load-test/              kịch bản k6
 └── docker-compose.yml      postgres, redis, kafka, prometheus, grafana, jaeger
 ```
+
+Toạ độ Maven: `groupId` = `com.cinebook`, `artifactId` của parent = `cinebook`. Base package = `com.cinebook`.
 
 ### 2.3 Tech stack
 
@@ -129,8 +133,10 @@ identity  │  catalog  │  booking  │  payment  │  notification
 
 ### 3.2 Cấu trúc bên trong mỗi module
 
+Mọi module nằm dưới base package `com.cinebook`:
+
 ```
-booking/
+com.cinebook.booking/
 ├── api/      interface + DTO — DUY NHẤT phần module khác nhìn thấy
 ├── domain/   entity, business rule, không phụ thuộc Spring Web
 ├── infra/    JPA repository, Redis, Kafka producer
@@ -140,7 +146,7 @@ booking/
 Riêng `catalog` chia sub-package theo aggregate để không phình thành nơi chứa mọi thứ:
 
 ```
-catalog/
+com.cinebook.catalog/
 ├── api/       MovieQuery │ VenueQuery │ ShowtimeQuery │ PriceQuery
 ├── domain/
 │   ├── movie/     Movie, Genre
@@ -468,7 +474,7 @@ Bước (3) cập nhật `seat_hold` với điều kiện `WHERE status = 'HELD'
 
 ### 6.5 Bước 4 — Outbox relay
 
-Chạy trong `booking-worker`, chu kỳ 1 giây:
+Chạy trong `cinebook-worker`, chu kỳ 1 giây:
 
 ```sql
 SELECT * FROM outbox_events
@@ -510,7 +516,7 @@ ShedLock đảm bảo chỉ một instance chạy tại một thời điểm.
 
 ### 6.7 Bước 6 — Realtime tới UI
 
-Sau khi commit, publish Redis pub/sub → mọi instance `booking-api` đang giữ WebSocket đẩy xuống `/topic/showtimes/{id}` → UI cập nhật màu ghế.
+Sau khi commit, publish Redis pub/sub → mọi instance `cinebook-api` đang giữ WebSocket đẩy xuống `/topic/showtimes/{id}` → UI cập nhật màu ghế.
 
 Phân vai rõ ràng: **Redis pub/sub** cho việc nhẹ và cần ngay (cập nhật màu ghế). **Kafka** cho việc nặng và chậm (email, đối soát, analytics).
 
@@ -628,7 +634,7 @@ Chạy hai lần — **trước và sau khi thêm Redis cache cho seat-map** —
 | 3 | `catalog`: phim/rạp/phòng/ghế/suất chiếu + `EXCLUDE` constraint + seed 10 phim, 3 rạp, 200 suất | Duyệt lịch chiếu thật |
 | **4-5** | **`booking`: hold/release/seat map + concurrency test 200 thread + xử lý deadlock** | **Đỉnh của dự án** |
 | 6 | `payment`: mock gateway → VNPay sandbox; idempotency; outbox + relay; job đối soát | Đặt vé trọn vòng |
-| 7 | `booking-worker`: sweeper, notification, WebSocket realtime | Ghế hết hạn tự nhả, UI thấy ngay |
+| 7 | `cinebook-worker`: sweeper, notification, WebSocket realtime | Ghế hết hạn tự nhả, UI thấy ngay |
 | 8 | UI tối giản: seat map realtime + trang thanh toán | Quay được video demo |
 | 9 | Observability + k6 + tối ưu + README có biểu đồ | Có số liệu trước/sau |
 | 10 | Đệm: deploy, video demo, tài liệu kiến trúc | Sẵn sàng đưa vào CV |
