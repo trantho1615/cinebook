@@ -4,7 +4,7 @@
 
 **Architecture:** Maven multi-module với parent POM kế thừa `spring-boot-starter-parent`. Ba module con: `common` (thư viện dùng chung), `cinebook-api` (deployable phục vụ HTTP), `cinebook-worker` (deployable chạy nền, không có endpoint nghiệp vụ). Ranh giới giữa các module nghiệp vụ và ranh giới "worker không phục vụ HTTP" đều được kiểm chứng bằng ArchUnit test, không dựa vào kỷ luật cá nhân.
 
-**Tech Stack:** Java 21, Spring Boot 3.5.3, Maven 3.9, PostgreSQL 16, Flyway, Testcontainers 1.21.3, ArchUnit 1.4.1, JUnit 5, AssertJ, GitHub Actions.
+**Tech Stack:** Java 21, Spring Boot 4.1.0, Maven 3.9, PostgreSQL 16, Flyway, Testcontainers 2.0.5, ArchUnit 1.5.0, JUnit 5, AssertJ, GitHub Actions.
 
 **Spec:** `docs/specs/2026-08-11-cinebook-core-design.md` — milestone này phủ mục 2.1, 2.2, 2.3, 3.3 và phần hạ tầng test của mục 8.1.
 
@@ -13,7 +13,7 @@
 Mọi task đều phải tuân thủ những ràng buộc dưới đây.
 
 - **Java version:** 21. Đặt qua property `<java.version>21</java.version>` trong parent POM.
-- **Spring Boot:** 3.5.3, khai báo đúng một lần ở `<parent>` của parent POM.
+- **Spring Boot:** 4.1.0, khai báo đúng một lần ở `<parent>` của parent POM. Dòng 3.5.x đã hết OSS support từ 2026-06-30 nên không dùng. Bốn hệ quả của Boot 4 so với tài liệu 3.x mà bạn đọc trên mạng: (1) BOM không còn quản lý version Testcontainers, phải tự import `testcontainers-bom`; (2) Testcontainers 2.x đổi tên artifact thành `testcontainers-postgresql`, `testcontainers-junit-jupiter`; (3) `TestRestTemplate` bị gỡ, dùng `RestClient` + `@LocalServerPort`; (4) autoconfiguration tách thành module riêng — `flyway-core` một mình **không** làm Flyway tự chạy, phải dùng `spring-boot-starter-flyway`.
 - **Maven coordinates:** `groupId` = `com.cinebook`, parent `artifactId` = `cinebook`, `version` = `0.1.0-SNAPSHOT`.
 - **Base package:** `com.cinebook`. Module nghiệp vụ nằm ở `com.cinebook.<module>` với `<module>` thuộc: `identity`, `catalog`, `booking`, `payment`, `notification`.
 - **Cấu trúc trong mỗi module nghiệp vụ:** đúng bốn package con `api`, `domain`, `infra`, `web`. Chỉ `api` được module khác nhìn thấy.
@@ -77,19 +77,24 @@ package com.cinebook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiApplicationTest {
 
-    @Autowired
-    TestRestTemplate rest;
+    @LocalServerPort
+    int port;
 
     @Test
     void health_endpoint_bao_trang_thai_UP() {
-        String body = rest.getForObject("/actuator/health", String.class);
+        String body = RestClient.create()
+                .get()
+                .uri("http://localhost:" + port + "/actuator/health")
+                .retrieve()
+                .body(String.class);
 
         assertThat(body).contains("\"status\":\"UP\"");
     }
@@ -120,7 +125,7 @@ Tạo `pom.xml` ở thư mục gốc:
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.3</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -138,11 +143,21 @@ Tạo `pom.xml` ở thư mục gốc:
 
     <properties>
         <java.version>21</java.version>
-        <archunit.version>1.4.1</archunit.version>
+        <archunit.version>1.5.0</archunit.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Boot 4 khong con quan ly version cua Testcontainers trong BOM cua no,
+                 nen phai import BOM nay thi cac artifact testcontainers moi co version. -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.cinebook</groupId>
                 <artifactId>common</artifactId>
@@ -159,7 +174,7 @@ Tạo `pom.xml` ở thư mục gốc:
 </project>
 ```
 
-Lưu ý: `spring-boot-starter-parent` đã quản lý sẵn version của Testcontainers, Flyway, AssertJ, Awaitility. Không khai báo version cho những thứ đó ở bất kỳ đâu.
+Lưu ý: `spring-boot-starter-parent` quản lý sẵn version của Flyway, AssertJ, Awaitility — không khai báo version cho chúng ở bất kỳ đâu. Riêng Testcontainers thì Boot 4 **không** quản lý nữa, nên BOM của nó phải tự import như trên.
 
 - [ ] **Step 4: Tạo module `common`**
 
@@ -309,7 +324,7 @@ mvn -B verify
 
 Kỳ vọng: BUILD SUCCESS, `ApiApplicationTest` chạy 1 test và pass.
 
-Nếu fail với `TestRestTemplate` không inject được: kiểm tra `webEnvironment = RANDOM_PORT` còn nguyên trên annotation `@SpringBootTest`.
+Nếu fail vì `port` bằng 0: kiểm tra `webEnvironment = RANDOM_PORT` còn nguyên trên annotation `@SpringBootTest`.
 
 - [ ] **Step 7: Chạy thử ứng dụng bằng tay**
 
@@ -412,9 +427,11 @@ Chèn vào trong khối `<dependencies>` đang có:
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        <!-- Spring Boot 4 tach autoconfiguration thanh module rieng: chi co flyway-core
+             tren classpath thi Flyway KHONG tu chay. Starter nay keo theo ca autoconfiguration. -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -433,12 +450,12 @@ Chèn vào trong khối `<dependencies>` đang có:
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
 ```

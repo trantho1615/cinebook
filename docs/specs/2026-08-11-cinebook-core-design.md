@@ -97,7 +97,7 @@ Toạ độ Maven: `groupId` = `com.cinebook`, `artifactId` của parent = `cine
 
 | Vai trò | Lựa chọn | Lý do |
 |---|---|---|
-| Runtime | Java 21 + Spring Boot 3.5 | Đã có sẵn; virtual thread, record, pattern matching |
+| Runtime | Java 21 + Spring Boot 4.1 | Đã có sẵn; virtual thread, record, pattern matching. Dòng 3.5 hết OSS support từ 2026-06-30 nên không dùng cho dự án mới |
 | Build | Maven 3.9 multi-module | Đã có sẵn |
 | Database | PostgreSQL 16 + Flyway | Partial unique index và exclusion constraint là mấu chốt thiết kế |
 | Truy cập dữ liệu | Spring Data JPA + `NamedParameterJdbcTemplate` | JPA cho CRUD thường; **JDBC thuần cho luồng giữ ghế, webhook, relay, sweeper** — xem mục 6.2.1 |
