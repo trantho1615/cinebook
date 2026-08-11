@@ -4,7 +4,7 @@
 
 **Architecture:** Maven multi-module với parent POM kế thừa `spring-boot-starter-parent`. Ba module con: `common` (thư viện dùng chung), `cinebook-api` (deployable phục vụ HTTP), `cinebook-worker` (deployable chạy nền, không có endpoint nghiệp vụ). Ranh giới giữa các module nghiệp vụ và ranh giới "worker không phục vụ HTTP" đều được kiểm chứng bằng ArchUnit test, không dựa vào kỷ luật cá nhân.
 
-**Tech Stack:** Java 21, Spring Boot 4.1.0, Maven 3.9, PostgreSQL 16, Flyway, Testcontainers 2.0.5, ArchUnit 1.5.0, JUnit 5, AssertJ, GitHub Actions.
+**Tech Stack:** Java 25 LTS, Spring Boot 4.1.0, Maven 3.9, PostgreSQL 18, Flyway, Testcontainers 2.0.5, ArchUnit 1.5.0, JUnit 5, AssertJ, GitHub Actions.
 
 **Spec:** `docs/specs/2026-08-11-cinebook-core-design.md` — milestone này phủ mục 2.1, 2.2, 2.3, 3.3 và phần hạ tầng test của mục 8.1.
 
@@ -12,7 +12,7 @@
 
 Mọi task đều phải tuân thủ những ràng buộc dưới đây.
 
-- **Java version:** 21. Đặt qua property `<java.version>21</java.version>` trong parent POM.
+- **Java version:** 25 (LTS). Đặt qua property `<java.version>25</java.version>` trong parent POM. `JAVA_HOME` phải trỏ tới JDK 25 khi chạy Maven.
 - **Spring Boot:** 4.1.0, khai báo đúng một lần ở `<parent>` của parent POM. Dòng 3.5.x đã hết OSS support từ 2026-06-30 nên không dùng. Bốn hệ quả của Boot 4 so với tài liệu 3.x mà bạn đọc trên mạng: (1) BOM không còn quản lý version Testcontainers, phải tự import `testcontainers-bom`; (2) Testcontainers 2.x đổi tên artifact thành `testcontainers-postgresql`, `testcontainers-junit-jupiter`; (3) `TestRestTemplate` bị gỡ, dùng `RestClient` + `@LocalServerPort`; (4) autoconfiguration tách thành module riêng — `flyway-core` một mình **không** làm Flyway tự chạy, phải dùng `spring-boot-starter-flyway`.
 - **Maven coordinates:** `groupId` = `com.cinebook`, parent `artifactId` = `cinebook`, `version` = `0.1.0-SNAPSHOT`.
 - **Base package:** `com.cinebook`. Module nghiệp vụ nằm ở `com.cinebook.<module>` với `<module>` thuộc: `identity`, `catalog`, `booking`, `payment`, `notification`.
@@ -142,7 +142,7 @@ Tạo `pom.xml` ở thư mục gốc:
     </modules>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <archunit.version>1.5.0</archunit.version>
         <testcontainers.version>2.0.5</testcontainers.version>
     </properties>
@@ -481,7 +481,7 @@ package com.cinebook.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Lop cha cho moi integration test. Container Postgres duoc khai bao static va
@@ -492,8 +492,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class AbstractIntegrationTest {
 
     @ServiceConnection
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer("postgres:18-alpine");
 
     static {
         POSTGRES.start();
@@ -564,7 +564,7 @@ vì PowerShell tách nhầm chuỗi có dấu chấm thành hai tham số.
 
 Kỳ vọng: PASS, 2 test.
 
-Lần chạy đầu sẽ mất khoảng 30-60 giây vì Docker phải kéo image `postgres:16-alpine`. Nếu lỗi `Could not find a valid Docker environment`, kiểm tra Docker Desktop đã chạy chưa.
+Lần chạy đầu sẽ mất khoảng 30-60 giây vì Docker phải kéo image `postgres:18-alpine`. Nếu lỗi `Could not find a valid Docker environment`, kiểm tra Docker Desktop đã chạy chưa.
 
 - [ ] **Step 8: Tạo `docker-compose.yml` cho môi trường local**
 
@@ -573,7 +573,7 @@ Tạo `docker-compose.yml` ở thư mục gốc:
 ```yaml
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: cinebook-postgres
     environment:
       POSTGRES_DB: cinebook
@@ -582,7 +582,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # Postgres 18+ doi quy uoc: mount o /var/lib/postgresql (image tu tao thu muc con
+      # theo major version) chu khong phai /var/lib/postgresql/data nhu cac ban truoc.
+      # Mount sai cho thi container khoi dong roi thoat ngay voi exit code 1.
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cinebook -d cinebook"]
       interval: 5s
@@ -590,7 +593,7 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: cinebook-redis
     command: ["redis-server", "--appendonly", "yes"]
     ports:
@@ -604,7 +607,7 @@ services:
       retries: 10
 
   kafka:
-    image: apache/kafka:3.9.0
+    image: apache/kafka:4.3.1
     container_name: cinebook-kafka
     ports:
       - "9092:9092"
@@ -1076,11 +1079,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Build and test
@@ -1106,14 +1109,14 @@ Tạo `README.md`:
 ```markdown
 # cinebook
 
-He thong dat ve xem phim. Backend Java 21 + Spring Boot, tap trung vao cac bai toan
+He thong dat ve xem phim. Backend Java 25 + Spring Boot, tap trung vao cac bai toan
 tranh chap ghe dong thoi, thanh toan bat dong bo va observability.
 
 Thiet ke chi tiet: [docs/specs/2026-08-11-cinebook-core-design.md](docs/specs/2026-08-11-cinebook-core-design.md)
 
 ## Yeu cau
 
-- JDK 21
+- JDK 25
 - Maven 3.9+
 - Docker + Docker Compose
 
@@ -1134,7 +1137,7 @@ mvn -B verify
 ```
 
 Integration test chay tren Postgres that qua Testcontainers, khong dung H2.
-Lan chay dau se mat them thoi gian de keo image `postgres:16-alpine`.
+Lan chay dau se mat them thoi gian de keo image `postgres:18-alpine`.
 
 ## Cau truc
 

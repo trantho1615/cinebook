@@ -59,7 +59,7 @@ Những thứ sau bị loại bỏ có chủ đích. Chúng không thêm chiều
    ──── webhook ────▶│  payment  │ notification      │
                      └───┬──────────┬────────┬───────┘
                          │          │        │
-                  Postgres 16   Redis 7   Kafka (outbox relay)
+                  Postgres 18   Redis 8   Kafka (outbox relay)
                     (SoT)      (cache+   ──────┬──────
                                pub/sub)        ▼
                                       ┌──────────────────┐
@@ -97,11 +97,11 @@ Toạ độ Maven: `groupId` = `com.cinebook`, `artifactId` của parent = `cine
 
 | Vai trò | Lựa chọn | Lý do |
 |---|---|---|
-| Runtime | Java 21 + Spring Boot 4.1 | Đã có sẵn; virtual thread, record, pattern matching. Dòng 3.5 hết OSS support từ 2026-06-30 nên không dùng cho dự án mới |
+| Runtime | Java 25 LTS + Spring Boot 4.1 | Đã có sẵn; virtual thread, record, pattern matching. Dòng 3.5 hết OSS support từ 2026-06-30 nên không dùng cho dự án mới |
 | Build | Maven 3.9 multi-module | Đã có sẵn |
-| Database | PostgreSQL 16 + Flyway | Partial unique index và exclusion constraint là mấu chốt thiết kế |
+| Database | PostgreSQL 18 + Flyway | Partial unique index và exclusion constraint là mấu chốt thiết kế |
 | Truy cập dữ liệu | Spring Data JPA + `NamedParameterJdbcTemplate` | JPA cho CRUD thường; **JDBC thuần cho luồng giữ ghế, webhook, relay, sweeper** — xem mục 6.2.1 |
-| Cache / pub-sub | Redis 7 | Cache seat-map, đẩy realtime qua WebSocket |
+| Cache / pub-sub | Redis 8 | Cache seat-map, đẩy realtime qua WebSocket |
 | Messaging | Kafka (KRaft, không Zookeeper) | Outbox relay, event bất đồng bộ |
 | Auth | Spring Security + JWT tự implement | Xem mục 4 |
 | Test | JUnit 5 + Testcontainers + Awaitility + AssertJ | Test trên hạ tầng thật, không H2 |
