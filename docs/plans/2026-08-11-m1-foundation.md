@@ -336,8 +336,10 @@ git commit -m "feat: khung maven multi-module va api khoi dong duoc"
 - Create: `docker-compose.yml`
 - Create: `cinebook-api/src/main/resources/db/migration/V1__baseline.sql`
 - Create: `cinebook-api/src/test/java/com/cinebook/support/AbstractIntegrationTest.java`
+- Create: `.gitattributes`
 - Modify: `cinebook-api/pom.xml` (thêm dependency JPA, Postgres driver, Flyway, Testcontainers)
 - Modify: `cinebook-api/src/main/resources/application.yml` (thêm datasource, JPA, Flyway)
+- Modify: `cinebook-api/src/test/java/com/cinebook/ApiApplicationTest.java` — cho kế thừa `AbstractIntegrationTest`. Bắt buộc: sau khi thêm `spring-boot-starter-data-jpa`, app cần DataSource lúc khởi động, nên nếu không kế thừa thì test sẽ lặng lẽ kết nối vào Postgres của `docker compose` trên máy lập trình viên và **đỏ trên CI**, nơi không có compose nào chạy.
 - Test: `cinebook-api/src/test/java/com/cinebook/db/BaselineMigrationTest.java`
 
 **Interfaces:**
@@ -391,8 +393,13 @@ Test thứ hai mới là test có giá trị: `btree_gist` là điều kiện đ
 - [ ] **Step 2: Chạy test để xác nhận nó fail**
 
 ```bash
-mvn -B -pl cinebook-api test -Dtest=BaselineMigrationTest
+mvn -B -pl cinebook-api -am test "-Dtest=BaselineMigrationTest" "-Dsurefire.failIfNoSpecifiedTests=false"
 ```
+
+Ba chi tiết bắt buộc trong lệnh trên: `-am` để Maven build cả `common` (thiếu nó thì lỗi
+`Could not find artifact com.cinebook:common`), `-Dsurefire.failIfNoSpecifiedTests=false` để
+`common` không fail vì không có test nào khớp tên, và **dấu nháy kép quanh mỗi tham số `-D`**
+vì PowerShell tách nhầm chuỗi có dấu chấm thành hai tham số.
 
 Kỳ vọng: FAIL với lỗi biên dịch — `package com.cinebook.support does not exist`.
 
@@ -530,8 +537,13 @@ Ba lựa chọn cần hiểu rõ:
 - [ ] **Step 7: Chạy test để xác nhận nó pass**
 
 ```bash
-mvn -B -pl cinebook-api test -Dtest=BaselineMigrationTest
+mvn -B -pl cinebook-api -am test "-Dtest=BaselineMigrationTest" "-Dsurefire.failIfNoSpecifiedTests=false"
 ```
+
+Ba chi tiết bắt buộc trong lệnh trên: `-am` để Maven build cả `common` (thiếu nó thì lỗi
+`Could not find artifact com.cinebook:common`), `-Dsurefire.failIfNoSpecifiedTests=false` để
+`common` không fail vì không có test nào khớp tên, và **dấu nháy kép quanh mỗi tham số `-D`**
+vì PowerShell tách nhầm chuỗi có dấu chấm thành hai tham số.
 
 Kỳ vọng: PASS, 2 test.
 
@@ -582,8 +594,12 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      # CONTROLLER bind vao localhost chu khong phai 0.0.0.0: Kafka 3.9 suy ra dia chi
+      # quang ba cua controller tu listeners khi advertised.listeners khong khai bao no,
+      # va tu choi khoi dong neu dia chi do la 0.0.0.0. Node don nen controller chi can loopback.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
