@@ -1,5 +1,7 @@
 # cinebook
 
+![CI](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml/badge.svg)
+
 He thong dat ve xem phim. Backend Java 25 + Spring Boot 4, tap trung vao ba bai toan:
 tranh chap ghe dong thoi, thanh toan bat dong bo, va observability co so lieu.
 
