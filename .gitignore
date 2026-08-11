@@ -1,0 +1,36 @@
+# Build
+target/
+build/
+!.mvn/wrapper/maven-wrapper.jar
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Node (web/)
+node_modules/
+dist/
+.next/
+
+# Local config & secrets
+.env
+.env.local
+*.local.properties
+application-local.yml
+
+# Logs & OS
+*.log
+logs/
+.DS_Store
+Thumbs.db
+
+# Test & tooling output
+/load-test/results/
+.claude/
