@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: cinebook-postgres
+    environment:
+      POSTGRES_DB: cinebook
+      POSTGRES_USER: cinebook
+      POSTGRES_PASSWORD: cinebook
+    ports:
+      - "5432:5432"
+    volumes:
+      # Postgres 18+ doi quy uoc: mount o /var/lib/postgresql (image tu tao thu muc con
+      # theo major version) chu khong phai /var/lib/postgresql/data nhu cac ban truoc.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinebook -d cinebook"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: cinebook-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:4.3.1
+    container_name: cinebook-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # CONTROLLER bind vao localhost chu khong phai 0.0.0.0: Kafka 3.9 suy ra dia chi
+      # quang ba cua controller tu listeners khi advertised.listeners khong khai bao no,
+      # va tu choi khoi dong neu dia chi do la 0.0.0.0. Node don nen controller chi can loopback.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,14 @@
+# Chuan hoa line ending: repo luu LF, checkout theo he dieu hanh.
+# Tranh diff gia toan file khi lam viec tren Windows va CI chay tren Linux.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
