@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.3</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -25,11 +25,21 @@
 
     <properties>
         <java.version>21</java.version>
-        <archunit.version>1.4.1</archunit.version>
+        <archunit.version>1.5.0</archunit.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Boot 4 khong con quan ly version cua Testcontainers trong BOM cua no,
+                 nen phai import BOM nay thi cac artifact testcontainers moi co version. -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.cinebook</groupId>
                 <artifactId>common</artifactId>
