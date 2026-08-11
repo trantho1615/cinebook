@@ -21,6 +21,7 @@
     <modules>
         <module>common</module>
         <module>cinebook-api</module>
+        <module>cinebook-worker</module>
     </modules>
 
     <properties>
