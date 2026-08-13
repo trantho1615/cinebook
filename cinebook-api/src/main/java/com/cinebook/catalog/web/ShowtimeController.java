@@ -1,8 +1,11 @@
 package com.cinebook.catalog.web;
 
+import com.cinebook.catalog.api.ShowtimeDetail;
+import com.cinebook.catalog.api.ShowtimeQuery;
 import com.cinebook.catalog.domain.movie.Movie;
 import com.cinebook.catalog.domain.movie.MovieNotFoundException;
 import com.cinebook.catalog.domain.showtime.Showtime;
+import com.cinebook.catalog.domain.showtime.ShowtimeNotFoundException;
 import com.cinebook.catalog.domain.showtime.ShowtimeOverlapException;
 import com.cinebook.catalog.domain.venue.RoomNotFoundException;
 import com.cinebook.catalog.infra.MovieRepository;
@@ -14,10 +17,14 @@ import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 public class ShowtimeController {
@@ -25,11 +32,20 @@ public class ShowtimeController {
     private final ShowtimeRepository showtimes;
     private final MovieRepository movies;
     private final RoomRepository rooms;
+    private final ShowtimeQuery showtimeQuery;
 
-    public ShowtimeController(ShowtimeRepository showtimes, MovieRepository movies, RoomRepository rooms) {
+    public ShowtimeController(ShowtimeRepository showtimes, MovieRepository movies,
+                              RoomRepository rooms, ShowtimeQuery showtimeQuery) {
         this.showtimes = showtimes;
         this.movies = movies;
         this.rooms = rooms;
+        this.showtimeQuery = showtimeQuery;
+    }
+
+    @GetMapping("/showtimes/{id}")
+    public ShowtimeDetail get(@PathVariable UUID id) {
+        return showtimeQuery.findDetail(id)
+                .orElseThrow(() -> new ShowtimeNotFoundException(id));
     }
 
     @PostMapping("/admin/showtimes")
