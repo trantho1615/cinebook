@@ -21,7 +21,8 @@ import java.io.IOException;
 @Configuration
 @EnableWebSecurity
 // Thieu annotation nay thi @PreAuthorize bi BO QUA HOAN TOAN, khong bao loi gi —
-// endpoint admin se mo cho moi nguoi da dang nhap.
+// endpoint admin se mo cho moi nguoi da dang nhap. Da kiem chung bang cach tam go
+// annotation: test customer_khong_goi_duoc_endpoint_danh_cho_admin do ngay.
 @EnableMethodSecurity
 public class SecurityConfig {
 
