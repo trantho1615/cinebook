@@ -4,6 +4,7 @@ import com.cinebook.shared.web.ApiError;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -50,6 +51,11 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login",
                                 "/auth/refresh", "/auth/logout").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // Duyet phim, rap va lich chieu khong can dang nhap — khach vang lai
+                        // phai xem duoc truoc khi quyet dinh tao tai khoan. Chi mo GET;
+                        // duong ghi nam duoi /admin/** va van duoc @PreAuthorize canh.
+                        .requestMatchers(HttpMethod.GET,
+                                "/movies/**", "/cinemas/**", "/showtimes/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 // Khong co entry point tuy chinh thi Spring Security mac dinh chuyen huong
