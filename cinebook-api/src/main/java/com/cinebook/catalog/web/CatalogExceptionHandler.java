@@ -1,6 +1,8 @@
 package com.cinebook.catalog.web;
 
 import com.cinebook.catalog.domain.movie.MovieNotFoundException;
+import com.cinebook.catalog.domain.showtime.ShowtimeNotFoundException;
+import com.cinebook.catalog.domain.showtime.ShowtimeOverlapException;
 import com.cinebook.catalog.domain.venue.CinemaNotFoundException;
 import com.cinebook.catalog.domain.venue.RoomNotFoundException;
 import com.cinebook.shared.web.ApiError;
@@ -36,6 +38,18 @@ public class CatalogExceptionHandler {
     public ResponseEntity<ApiError> handleRoomNotFound(RoomNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiError("ROOM_NOT_FOUND", e.getMessage()));
+    }
+
+    @ExceptionHandler(ShowtimeOverlapException.class)
+    public ResponseEntity<ApiError> handleShowtimeOverlap(ShowtimeOverlapException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("SHOWTIME_OVERLAP", e.getMessage()));
+    }
+
+    @ExceptionHandler(ShowtimeNotFoundException.class)
+    public ResponseEntity<ApiError> handleShowtimeNotFound(ShowtimeNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("SHOWTIME_NOT_FOUND", e.getMessage()));
     }
 
     /**
