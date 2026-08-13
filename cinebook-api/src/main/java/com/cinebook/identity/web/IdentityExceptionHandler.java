@@ -4,6 +4,7 @@ import com.cinebook.identity.domain.EmailAlreadyUsedException;
 import com.cinebook.identity.domain.ForbiddenException;
 import com.cinebook.identity.domain.InvalidCredentialsException;
 import com.cinebook.identity.domain.InvalidRefreshTokenException;
+import com.cinebook.identity.domain.TooManyLoginAttemptsException;
 import com.cinebook.identity.domain.UserNotFoundException;
 import com.cinebook.shared.web.ApiError;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,13 @@ public class IdentityExceptionHandler {
     public ResponseEntity<ApiError> handleUserNotFound(UserNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiError("USER_NOT_FOUND", e.getMessage()));
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ApiError> handleTooManyAttempts(TooManyLoginAttemptsException e) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(e.getRetryAfter().toSeconds()))
+                .body(new ApiError("TOO_MANY_LOGIN_ATTEMPTS", e.getMessage()));
     }
 
     /**

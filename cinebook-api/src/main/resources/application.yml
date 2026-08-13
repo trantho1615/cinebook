@@ -33,6 +33,10 @@ cinebook:
     access-ttl: 15m
     refresh-ttl: 7d
 
+  login:
+    max-failures: 5
+    lockout-window: 15m
+
 server:
   port: 8080
 

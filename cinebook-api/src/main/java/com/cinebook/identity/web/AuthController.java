@@ -4,9 +4,11 @@ import com.cinebook.identity.domain.EmailAlreadyUsedException;
 import com.cinebook.identity.domain.InvalidCredentialsException;
 import com.cinebook.identity.domain.InvalidRefreshTokenException;
 import com.cinebook.identity.domain.User;
+import com.cinebook.identity.infra.LoginAttemptLimiter;
 import com.cinebook.identity.infra.RefreshTokenStore;
 import com.cinebook.identity.infra.TokenService;
 import com.cinebook.identity.infra.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import com.cinebook.identity.web.dto.LoginRequest;
 import com.cinebook.identity.web.dto.RefreshRequest;
 import com.cinebook.identity.web.dto.RegisterRequest;
@@ -33,15 +35,18 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokens;
     private final RefreshTokenStore refreshTokens;
+    private final LoginAttemptLimiter loginLimiter;
 
     public AuthController(UserRepository users,
                           PasswordEncoder passwordEncoder,
                           TokenService tokens,
-                          RefreshTokenStore refreshTokens) {
+                          RefreshTokenStore refreshTokens,
+                          LoginAttemptLimiter loginLimiter) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.tokens = tokens;
         this.refreshTokens = refreshTokens;
+        this.loginLimiter = loginLimiter;
     }
 
     @PostMapping("/register")
@@ -60,11 +65,29 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
-        User user = users.findByEmail(User.normalizeEmail(request.email()))
-                .filter(u -> passwordEncoder.matches(request.password(), u.getPasswordHash()))
-                .orElseThrow(InvalidCredentialsException::new);
+    public TokenResponse login(@Valid @RequestBody LoginRequest request,
+                               HttpServletRequest httpRequest) {
+        String email = User.normalizeEmail(request.email());
+        // Lay IP truc tiep tu ket noi. Khi trien khai sau reverse proxy that thi
+        // phai cau hinh ForwardedHeaderFilter, khong doc X-Forwarded-For thu cong
+        // vi header do client gia mao duoc.
+        String ip = httpRequest.getRemoteAddr();
 
+        // Chan TRUOC khi tra database va truoc khi so khop BCrypt. Ngoai y nghia
+        // bao mat, BCrypt co tinh ton CPU nen de ke tan cong ep server bam mat khau
+        // hang nghin lan la mot huong tan cong tu choi dich vu.
+        loginLimiter.checkNotBlocked(email, ip);
+
+        var found = users.findByEmail(email)
+                .filter(u -> passwordEncoder.matches(request.password(), u.getPasswordHash()));
+
+        if (found.isEmpty()) {
+            loginLimiter.recordFailure(email, ip);
+            throw new InvalidCredentialsException();
+        }
+
+        loginLimiter.reset(email, ip);
+        User user = found.get();
         return new TokenResponse(
                 tokens.issueAccessToken(user),
                 refreshTokens.issueForNewSession(user.getId()),
