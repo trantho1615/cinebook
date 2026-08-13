@@ -50,6 +50,11 @@ class LoginRateLimitTest extends AbstractApiTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
         assertThat(response.getBody().get("code").asText()).isEqualTo("TOO_MANY_LOGIN_ATTEMPTS");
+
+        // Client can biet cho bao lau moi thu lai duoc, khong phai doan mo.
+        String retryAfter = response.getHeaders().getFirst("Retry-After");
+        assertThat(retryAfter).isNotNull();
+        assertThat(Long.parseLong(retryAfter)).isBetween(1L, 900L);
     }
 
     @Test
