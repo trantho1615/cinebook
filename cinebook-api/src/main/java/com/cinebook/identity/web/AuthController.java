@@ -1,18 +1,26 @@
 package com.cinebook.identity.web;
 
 import com.cinebook.identity.domain.EmailAlreadyUsedException;
+import com.cinebook.identity.domain.InvalidCredentialsException;
 import com.cinebook.identity.domain.User;
+import com.cinebook.identity.infra.TokenService;
 import com.cinebook.identity.infra.UserRepository;
+import com.cinebook.identity.web.dto.LoginRequest;
 import com.cinebook.identity.web.dto.RegisterRequest;
+import com.cinebook.identity.web.dto.TokenResponse;
 import com.cinebook.identity.web.dto.UserResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,10 +28,12 @@ public class AuthController {
 
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokens;
 
-    public AuthController(UserRepository users, PasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository users, PasswordEncoder passwordEncoder, TokenService tokens) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
+        this.tokens = tokens;
     }
 
     @PostMapping("/register")
@@ -39,5 +49,19 @@ public class AuthController {
                 request.fullName(),
                 request.phone());
         return UserResponse.from(users.save(user));
+    }
+
+    @PostMapping("/login")
+    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
+        User user = users.findByEmail(User.normalizeEmail(request.email()))
+                .filter(u -> passwordEncoder.matches(request.password(), u.getPasswordHash()))
+                .orElseThrow(InvalidCredentialsException::new);
+
+        return new TokenResponse(tokens.issueAccessToken(user), tokens.accessTtlSeconds());
+    }
+
+    @GetMapping("/me")
+    public UserResponse me(@AuthenticationPrincipal UUID userId) {
+        return UserResponse.from(users.findById(userId).orElseThrow(InvalidCredentialsException::new));
     }
 }
