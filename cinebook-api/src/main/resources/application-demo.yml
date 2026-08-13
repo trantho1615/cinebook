@@ -1,0 +1,5 @@
+# Profile demo: chay ung dung voi du lieu mau de thu bang tay va quay video demo.
+# Kich hoat bang: mvn -B -pl cinebook-api spring-boot:run -Dspring-boot.run.profiles=demo
+logging:
+  level:
+    com.cinebook.catalog.infra.DemoDataSeeder: INFO

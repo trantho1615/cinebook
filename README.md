@@ -32,6 +32,22 @@ mvn -B -pl cinebook-worker spring-boot:run   # cong 8081
 
 Health check: http://localhost:8080/actuator/health va http://localhost:8081/actuator/health
 
+### Chay voi du lieu mau
+
+```bash
+mvn -B -pl cinebook-api spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+Nap 10 phim, 3 rap, 9 phong (96 ghe moi phong) va 252 suat chieu trong 7 ngay toi.
+Bo nap la idempotent: chay lai khong tao du lieu trung.
+
+Thu nhanh:
+
+```bash
+curl "http://localhost:8080/movies?status=NOW_SHOWING"
+curl "http://localhost:8080/showtimes?city=Ho%20Chi%20Minh&district=Quan%201"
+```
+
 ## Chay test
 
 ```bash
