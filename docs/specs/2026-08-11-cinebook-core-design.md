@@ -193,9 +193,13 @@ Không tự viết thuật toán ký — dùng `jjwt` hoặc Nimbus.
 
 Mỗi refresh token thuộc về một **token family**. Khi dùng để refresh: token cũ bị đánh dấu đã dùng, token mới cùng family được phát ra. Nếu một token **đã dùng** bị dùng lại lần nữa → dấu hiệu bị đánh cắp → huỷ toàn bộ family, buộc đăng nhập lại.
 
+Refresh token **không phải JWT** — nó là 32 byte ngẫu nhiên. Lý do: access token cần verify được mà không tra store (JWT hợp), còn refresh token cần **thu hồi được tức thì** (JWT không làm được nếu không tra store). Redis chỉ lưu bản băm SHA-256, nên Redis bị lộ thì kẻ tấn công vẫn không có token dùng được.
+
 Lưu trong Redis:
-- `rt:{jti}` → `{userId, familyId, used}`, TTL 7 ngày
-- `rtfam:{familyId}` → tập các jti thuộc family, để huỷ hàng loạt
+- `rt:{sha256(token)}` → hash `{userId, familyId, used}`, TTL 7 ngày
+- `rtfam:{familyId}` → tập các bản băm thuộc family, để huỷ hàng loạt
+
+Family gắn với **một lần đăng nhập**, không phải với user. Nhờ vậy sự cố trên một thiết bị không làm văng phiên đăng nhập ở thiết bị khác.
 
 ### 4.4 Object-level authorization
 
