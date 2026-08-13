@@ -38,7 +38,12 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        // /auth/refresh va /auth/logout phai cong khai vi client goi chung
+                        // KHI access token da het han. Doi access token hop le thi co che
+                        // refresh tro nen vo nghia. Refresh token la thu xac thuc cho hai
+                        // loi goi nay.
+                        .requestMatchers("/auth/register", "/auth/login",
+                                "/auth/refresh", "/auth/logout").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

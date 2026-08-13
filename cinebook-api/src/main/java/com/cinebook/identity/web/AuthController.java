@@ -2,10 +2,13 @@ package com.cinebook.identity.web;
 
 import com.cinebook.identity.domain.EmailAlreadyUsedException;
 import com.cinebook.identity.domain.InvalidCredentialsException;
+import com.cinebook.identity.domain.InvalidRefreshTokenException;
 import com.cinebook.identity.domain.User;
+import com.cinebook.identity.infra.RefreshTokenStore;
 import com.cinebook.identity.infra.TokenService;
 import com.cinebook.identity.infra.UserRepository;
 import com.cinebook.identity.web.dto.LoginRequest;
+import com.cinebook.identity.web.dto.RefreshRequest;
 import com.cinebook.identity.web.dto.RegisterRequest;
 import com.cinebook.identity.web.dto.TokenResponse;
 import com.cinebook.identity.web.dto.UserResponse;
@@ -29,11 +32,16 @@ public class AuthController {
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokens;
+    private final RefreshTokenStore refreshTokens;
 
-    public AuthController(UserRepository users, PasswordEncoder passwordEncoder, TokenService tokens) {
+    public AuthController(UserRepository users,
+                          PasswordEncoder passwordEncoder,
+                          TokenService tokens,
+                          RefreshTokenStore refreshTokens) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.tokens = tokens;
+        this.refreshTokens = refreshTokens;
     }
 
     @PostMapping("/register")
@@ -57,7 +65,27 @@ public class AuthController {
                 .filter(u -> passwordEncoder.matches(request.password(), u.getPasswordHash()))
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return new TokenResponse(tokens.issueAccessToken(user), tokens.accessTtlSeconds());
+        return new TokenResponse(
+                tokens.issueAccessToken(user),
+                refreshTokens.issueForNewSession(user.getId()),
+                tokens.accessTtlSeconds());
+    }
+
+    @PostMapping("/refresh")
+    public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
+        RefreshTokenStore.Rotation rotation = refreshTokens.rotate(request.refreshToken());
+        User user = users.findById(rotation.userId()).orElseThrow(InvalidRefreshTokenException::new);
+
+        return new TokenResponse(
+                tokens.issueAccessToken(user),
+                rotation.newRawToken(),
+                tokens.accessTtlSeconds());
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@Valid @RequestBody RefreshRequest request) {
+        refreshTokens.revokeFamilyOf(request.refreshToken());
     }
 
     @GetMapping("/me")
