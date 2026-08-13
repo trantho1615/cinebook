@@ -1,7 +1,9 @@
 package com.cinebook.support;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
@@ -18,5 +20,16 @@ public abstract class AbstractIntegrationTest {
 
     static {
         POSTGRES.start();
+    }
+
+    @Autowired
+    private JdbcTemplate truncateTemplate;
+
+    /**
+     * Container dung chung ca phien test nen du lieu cua test truoc con lai.
+     * Goi trong @BeforeEach de moi test bat dau tu trang thai sach.
+     */
+    protected void truncate(String... tables) {
+        truncateTemplate.execute("TRUNCATE TABLE " + String.join(", ", tables) + " CASCADE");
     }
 }
