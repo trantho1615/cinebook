@@ -14,7 +14,7 @@ public abstract class AbstractApiTest extends AbstractIntegrationTest {
     @LocalServerPort
     protected int port;
 
-    protected RestClient client() {
+    public RestClient client() {
         return RestClient.builder()
                 .baseUrl("http://localhost:" + port)
                 .defaultStatusHandler(status -> true, (request, response) -> {
