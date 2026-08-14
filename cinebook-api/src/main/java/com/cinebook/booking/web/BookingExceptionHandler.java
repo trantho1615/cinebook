@@ -1,5 +1,6 @@
 package com.cinebook.booking.web;
 
+import com.cinebook.booking.domain.DuplicateRequestException;
 import com.cinebook.booking.domain.InvalidSeatSelectionException;
 import com.cinebook.booking.domain.SeatsUnavailableException;
 import com.cinebook.booking.domain.ShowtimeNotBookableException;
@@ -28,5 +29,11 @@ public class BookingExceptionHandler {
     public ResponseEntity<ApiError> handleNotBookable(ShowtimeNotBookableException e) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(new ApiError("SHOWTIME_NOT_BOOKABLE", e.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateRequestException.class)
+    public ResponseEntity<ApiError> handleDuplicateRequest(DuplicateRequestException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("DUPLICATE_REQUEST", e.getMessage()));
     }
 }
