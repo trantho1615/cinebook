@@ -1,6 +1,8 @@
 package com.cinebook.booking.web;
 
+import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.booking.domain.DuplicateRequestException;
+import com.cinebook.booking.domain.HoldExpiredException;
 import com.cinebook.booking.domain.InvalidSeatSelectionException;
 import com.cinebook.booking.domain.SeatsUnavailableException;
 import com.cinebook.booking.domain.ShowtimeNotBookableException;
@@ -35,5 +37,21 @@ public class BookingExceptionHandler {
     public ResponseEntity<ApiError> handleDuplicateRequest(DuplicateRequestException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiError("DUPLICATE_REQUEST", e.getMessage()));
+    }
+
+    @ExceptionHandler(BookingNotFoundException.class)
+    public ResponseEntity<ApiError> handleBookingNotFound(BookingNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("BOOKING_NOT_FOUND", e.getMessage()));
+    }
+
+    /**
+     * 410 GONE chu khong phai 404 hay 409: tai nguyen DA TUNG ton tai va gio khong con.
+     * Client phan biet duoc voi "chua bao gio co".
+     */
+    @ExceptionHandler(HoldExpiredException.class)
+    public ResponseEntity<ApiError> handleHoldExpired(HoldExpiredException e) {
+        return ResponseEntity.status(HttpStatus.GONE)
+                .body(new ApiError("HOLD_EXPIRED", e.getMessage()));
     }
 }
