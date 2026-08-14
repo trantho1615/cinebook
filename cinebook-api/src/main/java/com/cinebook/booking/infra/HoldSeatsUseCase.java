@@ -61,9 +61,16 @@ public class HoldSeatsUseCase {
             """;
 
     /**
-     * ORDER BY s.seat_id la thu chong deadlock: hai transaction cung giu {F7, F8} theo
-     * thu tu nguoc nhau se cho nhau vinh vien. Sap xep khien moi transaction khoa
-     * theo cung mot thu tu. DUNG BO DONG NAY.
+     * ORDER BY s.seat_id chong deadlock: hai transaction cung giu {D7, D8} theo thu tu
+     * nguoc nhau se cho nhau vinh vien. Sap xep khien moi transaction khoa theo cung
+     * mot thu tu.
+     *
+     * DA KIEM CHUNG BANG THUC NGHIEM (DeadlockRegressionTest, 60 cap thread):
+     *   - Java sap xep + khong ORDER BY  -> khong deadlock
+     *   - Khong sap xep o dau ca         -> DEADLOCK
+     *   - Khong sap xep Java + ORDER BY  -> khong deadlock
+     * Nghia la moi co che mot minh da du. Giu ca hai la phong thu nhieu lop:
+     * neu ai do refactor phan Java, tang SQL van con do lai.
      *
      * ON CONFLICT DO NOTHING + RETURNING: khong nem exception, chi tra ve ghe nao
      * vao duoc. So sanh so luong la biet chinh xac ghe nao mat.
@@ -117,6 +124,8 @@ public class HoldSeatsUseCase {
         List<SeatView> chosen = resolveChosenSeats(requestedSeatIds, seatsById);
 
         // Sap xep de bao dam thu tu khoa nhat quan giua moi transaction.
+        // Day la lop chong deadlock thu nhat; ORDER BY trong SQL_INSERT_HOLDS la lop
+        // thu hai. Thuc nghiem cho thay moi lop mot minh da du (xem comment o SQL).
         String[] sortedSeatIds = chosen.stream()
                 .map(SeatView::seatId)
                 .sorted()
@@ -222,6 +231,8 @@ public class HoldSeatsUseCase {
             }
             chosen.add(seat);
         }
+        // Sap xep theo nhan ghe de danh sach tra ve cho nguoi dung co thu tu tu nhien
+        // (A1, A2, ... ) thay vi theo thu tu ho bam chuot.
         List<SeatView> sorted = new ArrayList<>(chosen);
         sorted.sort(Comparator.comparing(SeatView::rowLabel).thenComparingInt(SeatView::seatNumber));
         return List.copyOf(sorted);
