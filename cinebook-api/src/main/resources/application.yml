@@ -37,6 +37,10 @@ cinebook:
     max-failures: 5
     lockout-window: 15m
 
+  booking:
+    hold-ttl: 10m
+    max-seats-per-hold: 8
+
 server:
   port: 8080
 
