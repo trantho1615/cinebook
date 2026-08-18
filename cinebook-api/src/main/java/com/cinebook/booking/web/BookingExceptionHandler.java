@@ -4,8 +4,10 @@ import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.booking.domain.DuplicateRequestException;
 import com.cinebook.booking.domain.HoldExpiredException;
 import com.cinebook.booking.domain.InvalidSeatSelectionException;
+import com.cinebook.booking.domain.NoAdjacentSeatsException;
 import com.cinebook.booking.domain.SeatsUnavailableException;
 import com.cinebook.booking.domain.ShowtimeNotBookableException;
+import com.cinebook.booking.domain.ShowtimeUnknownException;
 import com.cinebook.shared.web.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,5 +55,17 @@ public class BookingExceptionHandler {
     public ResponseEntity<ApiError> handleHoldExpired(HoldExpiredException e) {
         return ResponseEntity.status(HttpStatus.GONE)
                 .body(new ApiError("HOLD_EXPIRED", e.getMessage()));
+    }
+
+    @ExceptionHandler(NoAdjacentSeatsException.class)
+    public ResponseEntity<ApiError> handleNoAdjacentSeats(NoAdjacentSeatsException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("NO_ADJACENT_SEATS", e.getMessage()));
+    }
+
+    @ExceptionHandler(ShowtimeUnknownException.class)
+    public ResponseEntity<ApiError> handleShowtimeUnknown(ShowtimeUnknownException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("SHOWTIME_NOT_FOUND", e.getMessage()));
     }
 }
