@@ -7,7 +7,6 @@ import com.cinebook.payment.infra.ProcessPaymentUseCase;
 import com.cinebook.payment.infra.ReconcilePaymentsUseCase;
 import com.cinebook.payment.infra.RefundUseCase;
 import com.cinebook.shared.audit.AuditLogger;
-import com.cinebook.shared.outbox.LoggingEventPublisher;
 import com.cinebook.shared.outbox.OutboxRelay;
 import com.cinebook.shared.outbox.OutboxWriter;
 import org.springframework.context.annotation.Configuration;
@@ -26,15 +25,15 @@ import org.springframework.context.annotation.Import;
  * ConfirmBookingUseCase -> {AuditLogger, OutboxWriter}, RefundUseCase }, cong
  * MockPaymentGateway cho ca hai. Bo mot dong la context chet ngay luc khoi dong.
  *
- * LoggingEventPublisher chi la cho tam: milestone nay se thay bang KafkaEventPublisher
- * o task relay, va dong do phai bi go ra — de lai ca hai se thanh hai bean cung kieu.
+ * KHONG @Import LoggingEventPublisher: worker dung KafkaEventPublisher (mot @Component
+ * trong chinh package cua worker nen duoc quet binh thuong). De ca hai la co hai bean
+ * cung kieu EventPublisher va context khong biet chon cai nao.
  */
 @Configuration
 @Import({
         MockPaymentGateway.class,
         AuditLogger.class,
         OutboxWriter.class,
-        LoggingEventPublisher.class,
         OutboxRelay.class,
         ConfirmBookingUseCase.class,
         SweepExpiredHoldsUseCase.class,

@@ -13,6 +13,15 @@ spring:
   flyway:
     enabled: false
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      properties:
+        # Chan broker ghi trung khi producer retry. KHONG thay the duoc cho viec consumer
+        # idempotent — chi giam so lan phai dung den no.
+        enable.idempotence: true
+
   data:
     redis:
       host: localhost
@@ -28,6 +37,8 @@ cinebook:
     reconcile-after: 15m
   worker:
     sweep-interval: 30s
+    relay-interval: 1s
+    reconcile-interval: 5m
 
 server:
   port: 8081
