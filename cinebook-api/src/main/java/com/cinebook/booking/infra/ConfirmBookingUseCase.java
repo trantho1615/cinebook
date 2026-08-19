@@ -3,6 +3,7 @@ package com.cinebook.booking.infra;
 import com.cinebook.booking.api.BookingConfirmation;
 import com.cinebook.booking.api.HoldExpiredException;
 import com.cinebook.booking.domain.TicketCode;
+import com.cinebook.shared.audit.AuditLogger;
 import com.cinebook.shared.outbox.OutboxWriter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

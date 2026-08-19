@@ -15,6 +15,20 @@ public interface PaymentGateway {
 
     Session createSession(UUID paymentId, long amount, String bookingCode);
 
+    /**
+     * Chu dong hoi cong thanh toan xem giao dich that su di den dau. Dung cho job doi
+     * soat khi webhook khong bao gio den.
+     */
+    RemoteStatus queryStatus(String providerTxnId);
+
+    String refund(String providerTxnId, long amount);
+
     record Session(String redirectUrl, String providerTxnId) {
+    }
+
+    enum RemoteStatus {
+        SUCCEEDED,
+        FAILED,
+        PENDING
     }
 }

@@ -39,7 +39,7 @@ final class PaymentFixture {
     }
 
     static PaymentFixture freshSetup(AbstractApiTest test, JdbcTemplate db) {
-        db.execute("TRUNCATE TABLE outbox_events, payment_events, payments CASCADE");
+        db.execute("TRUNCATE TABLE outbox_events, refunds, payment_events, payments CASCADE");
         db.execute("TRUNCATE TABLE audit_log, booking_items, seat_hold, bookings CASCADE");
         db.execute("TRUNCATE TABLE idempotency_keys CASCADE");
         db.execute("TRUNCATE TABLE showtimes CASCADE");

@@ -32,4 +32,18 @@ public class MockPaymentGateway implements PaymentGateway {
                 + "&amount=" + amount;
         return new Session(redirectUrl, providerTxnId);
     }
+
+    @Override
+    public RemoteStatus queryStatus(String providerTxnId) {
+        // Cong gia lap: moi giao dich hop le deu coi nhu da thanh cong. Cai dat that
+        // se goi API tra cuu cua provider.
+        return providerTxnId != null && providerTxnId.startsWith("MOCK-")
+                ? RemoteStatus.SUCCEEDED
+                : RemoteStatus.FAILED;
+    }
+
+    @Override
+    public String refund(String providerTxnId, long amount) {
+        return "MOCK-REFUND-" + UUID.randomUUID();
+    }
 }

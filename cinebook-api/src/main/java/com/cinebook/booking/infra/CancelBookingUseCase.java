@@ -2,6 +2,7 @@ package com.cinebook.booking.infra;
 
 import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.identity.api.AccessControl;
+import com.cinebook.shared.audit.AuditLogger;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;

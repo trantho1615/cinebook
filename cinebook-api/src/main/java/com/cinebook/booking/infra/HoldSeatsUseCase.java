@@ -7,6 +7,7 @@ import com.cinebook.booking.domain.ShowtimeNotBookableException;
 import com.cinebook.catalog.api.SeatView;
 import com.cinebook.catalog.api.ShowtimeDetail;
 import com.cinebook.catalog.api.ShowtimeQuery;
+import com.cinebook.shared.audit.AuditLogger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

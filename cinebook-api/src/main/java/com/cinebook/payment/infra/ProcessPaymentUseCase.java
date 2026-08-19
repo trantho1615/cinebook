@@ -1,6 +1,7 @@
 package com.cinebook.payment.infra;
 
 import com.cinebook.booking.api.BookingConfirmation;
+import com.cinebook.booking.api.HoldExpiredException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -29,12 +30,15 @@ public class ProcessPaymentUseCase {
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
     private final BookingConfirmation bookingConfirmation;
+    private final RefundUseCase refundUseCase;
 
     public ProcessPaymentUseCase(NamedParameterJdbcTemplate jdbc, ObjectMapper objectMapper,
-                                 BookingConfirmation bookingConfirmation) {
+                                 BookingConfirmation bookingConfirmation,
+                                 RefundUseCase refundUseCase) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.bookingConfirmation = bookingConfirmation;
+        this.refundUseCase = refundUseCase;
     }
 
     @Transactional
@@ -58,7 +62,13 @@ public class ProcessPaymentUseCase {
                     .addValue("paymentId", paymentId.toString())
                     .addValue("status", "SUCCEEDED")
                     .addValue("providerTxnId", providerTxnId));
-            bookingConfirmation.confirm(bookingId, paymentId);
+            try {
+                bookingConfirmation.confirm(bookingId, paymentId);
+            } catch (HoldExpiredException e) {
+                // Webhook den sau khi ghe da co chu moi. Khong phai loi he thong —
+                // tra lai tien va ket thuc binh thuong.
+                refundUseCase.refundBecauseSeatsLost(paymentId);
+            }
         } else {
             jdbc.update(SQL_UPDATE_STATUS, new MapSqlParameterSource()
                     .addValue("paymentId", paymentId.toString())
