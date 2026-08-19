@@ -1,5 +1,6 @@
 package com.cinebook.booking.infra;
 
+import com.cinebook.booking.api.BookingLookup;
 import com.cinebook.booking.api.BookingView;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,7 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class BookingQueryJdbc {
+public class BookingQueryJdbc implements BookingLookup {
 
     /**
      * Gop danh sach ghe bang array_agg thay vi truy van rieng cho tung don:
@@ -66,6 +67,7 @@ public class BookingQueryJdbc {
                 (rs, rowNum) -> map(rs));
     }
 
+    @Override
     public Optional<BookingView> findById(UUID bookingId) {
         return jdbc.query(SQL_BY_ID,
                         new MapSqlParameterSource().addValue("bookingId", bookingId.toString()),
@@ -74,6 +76,7 @@ public class BookingQueryJdbc {
                 .findFirst();
     }
 
+    @Override
     public Optional<UUID> findOwner(UUID bookingId) {
         return jdbc.query("SELECT user_id FROM bookings WHERE id = CAST(:bookingId AS uuid)",
                         new MapSqlParameterSource().addValue("bookingId", bookingId.toString()),

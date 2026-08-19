@@ -41,6 +41,11 @@ cinebook:
     hold-ttl: 10m
     max-seats-per-hold: 8
 
+  payment:
+    mock-base-url: https://sandbox.example.com
+    webhook-secret: ${CINEBOOK_WEBHOOK_SECRET:doi-chuoi-nay-truoc-khi-deploy-that}
+    reconcile-after: 15m
+
 server:
   port: 8080
 

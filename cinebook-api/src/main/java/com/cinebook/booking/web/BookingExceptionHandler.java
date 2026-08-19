@@ -2,7 +2,7 @@ package com.cinebook.booking.web;
 
 import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.booking.domain.DuplicateRequestException;
-import com.cinebook.booking.domain.HoldExpiredException;
+import com.cinebook.booking.api.HoldExpiredException;
 import com.cinebook.booking.domain.InvalidSeatSelectionException;
 import com.cinebook.booking.domain.NoAdjacentSeatsException;
 import com.cinebook.booking.domain.SeatsUnavailableException;
