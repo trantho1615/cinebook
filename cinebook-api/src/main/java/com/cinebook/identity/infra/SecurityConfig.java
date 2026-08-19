@@ -51,6 +51,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register", "/auth/login",
                                 "/auth/refresh", "/auth/logout").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        // Webhook den tu cong thanh toan, khong co token cua nguoi dung.
+                        // Chu ky HMAC la thu xac thuc cho endpoint nay.
+                        .requestMatchers(HttpMethod.POST, "/webhooks/**").permitAll()
                         // Duyet phim, rap va lich chieu khong can dang nhap — khach vang lai
                         // phai xem duoc truoc khi quyet dinh tao tai khoan. Chi mo GET;
                         // duong ghi nam duoi /admin/** va van duoc @PreAuthorize canh.
