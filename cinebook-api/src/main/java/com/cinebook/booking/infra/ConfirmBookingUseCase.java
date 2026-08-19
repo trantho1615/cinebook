@@ -3,6 +3,7 @@ package com.cinebook.booking.infra;
 import com.cinebook.booking.api.BookingConfirmation;
 import com.cinebook.booking.api.HoldExpiredException;
 import com.cinebook.booking.domain.TicketCode;
+import com.cinebook.shared.outbox.OutboxWriter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -58,10 +59,13 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final AuditLogger auditLogger;
+    private final OutboxWriter outbox;
 
-    public ConfirmBookingUseCase(NamedParameterJdbcTemplate jdbc, AuditLogger auditLogger) {
+    public ConfirmBookingUseCase(NamedParameterJdbcTemplate jdbc, AuditLogger auditLogger,
+                                 OutboxWriter outbox) {
         this.jdbc = jdbc;
         this.auditLogger = auditLogger;
+        this.outbox = outbox;
     }
 
     /**
@@ -95,6 +99,11 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
                     .addValue("ticketCode", TicketCode.generate()));
         }
 
+        // Ghi event trong CHINH transaction vua doi trang thai don: hoac ca hai cung
+        // ton tai, hoac ca hai cung khong. Khong con khe ho "da xac nhan nhung event bay mat".
+        outbox.write("BOOKING", bookingId, "BookingConfirmed",
+                "{\"bookingId\":\"" + bookingId + "\",\"paymentId\":\"" + paymentId + "\"}");
+
         auditLogger.record("BOOKING", bookingId, "CONFIRMED",
                 AuditLogger.ActorType.SYSTEM, null,
                 "{\"paymentId\":\"" + paymentId + "\"}");
@@ -107,6 +116,9 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
                 new MapSqlParameterSource().addValue("bookingId", bookingId.toString());
         jdbc.update(SQL_RELEASE_HOLDS, params);
         jdbc.update(SQL_CANCEL_BOOKING, params);
+
+        outbox.write("BOOKING", bookingId, "BookingPaymentFailed",
+                "{\"bookingId\":\"" + bookingId + "\"}");
 
         auditLogger.record("BOOKING", bookingId, "PAYMENT_FAILED",
                 AuditLogger.ActorType.SYSTEM, null, "{}");
