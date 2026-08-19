@@ -2,6 +2,31 @@ spring:
   application:
     name: cinebook-worker
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cinebook
+    username: cinebook
+    password: cinebook
+
+  # cinebook-api so huu schema. Hai deployable cung migrate la cach chac chan co ngay mot
+  # ban deploy nua voi lam hong schema. Test cua worker bat lai qua @SpringBootTest
+  # properties vi container test la DB trang.
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# LUU Y: application.yml cua cinebook-api nam trong jar va BI BO QUA HOAN TOAN — tren
+# classpath co hai file cung ten va Spring Boot chi doc mot (da kiem chung: getResource
+# tra ve file cua worker). Moi property ma bean duoc @Import can deu phai khai lai o day.
+# Thieu thi context chet ngay luc khoi dong voi loi placeholder, khong chay sai am tham.
+cinebook:
+  payment:
+    mock-base-url: https://sandbox.example.com
+    reconcile-after: 15m
+
 server:
   port: 8081
 

@@ -104,6 +104,17 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Mac dinh goal repackage THAY LUON artifact chinh bang fat jar 73 MB, ma
+                     trong fat jar class nam duoi BOOT-INF/classes nen khong module nao
+                     compile duoc voi no. Classifier nay giu jar chinh la thu vien binh
+                     thuong (190 KB) va day ban chay duoc sang cinebook-api-*-exec.jar.
+                     Da kiem chung bang cach mo ca hai jar.
+
+                     He qua van hanh: lenh chay that la
+                     java -jar cinebook-api-0.1.0-SNAPSHOT-exec.jar -->
+                <configuration>
+                    <classifier>exec</classifier>
+                </configuration>
             </plugin>
         </plugins>
     </build>

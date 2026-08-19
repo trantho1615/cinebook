@@ -18,6 +18,13 @@
             <groupId>com.cinebook</groupId>
             <artifactId>common</artifactId>
         </dependency>
+        <!-- Worker khong chua logic nghiep vu: no phu thuoc api nhu mot thu vien roi
+             kich hoat dung nhung use-case can chay nen. Xem WorkerBeans.java. -->
+        <dependency>
+            <groupId>com.cinebook</groupId>
+            <artifactId>cinebook-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -30,6 +37,21 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
