@@ -16,8 +16,9 @@ import java.util.Map;
  * Dung san mot suat chieu that (phim 120 phut, phong 5 hang x 10 ghe, gia goc 90000)
  * cung hai nguoi dung thuong va mot admin.
  *
- * Khong tai su dung BookingFixture cua Milestone 4 vi no package-private trong
- * package booking cua test.
+ * Van tach rieng khoi BookingFixture (da duoc mo public o Milestone 6) vi no mang them
+ * cac buoc rieng cua thanh toan: initiatePayment, lamChoHetHan va TRUNCATE cac bang
+ * payments/refunds/outbox.
  */
 final class PaymentFixture {
 

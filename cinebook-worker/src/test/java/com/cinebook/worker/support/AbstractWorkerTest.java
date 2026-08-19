@@ -14,7 +14,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * Flyway bat lai o day: worker chay that KHONG migrate (cinebook-api so huu schema),
  * nhung container test la DB trang nen phai co ai do dung schema len.
  */
-@SpringBootTest(properties = "spring.flyway.enabled=true")
+@SpringBootTest(properties = {
+        // Giong main(): worker doc cinebook-worker.yml, khong doc application.yml
+        "spring.config.name=cinebook-worker",
+        "spring.flyway.enabled=true"
+})
 // Profile "test" tat lich chay job — xem SchedulingConfig.
 @ActiveProfiles("test")
 public abstract class AbstractWorkerTest {

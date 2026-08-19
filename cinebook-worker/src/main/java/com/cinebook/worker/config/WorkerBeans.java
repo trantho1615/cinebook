@@ -1,7 +1,11 @@
 package com.cinebook.worker.config;
 
+import com.cinebook.booking.infra.BookingQueryJdbc;
 import com.cinebook.booking.infra.ConfirmBookingUseCase;
 import com.cinebook.booking.infra.SweepExpiredHoldsUseCase;
+import com.cinebook.identity.infra.UserQueryJdbc;
+import com.cinebook.notification.infra.LoggingEmailSender;
+import com.cinebook.notification.infra.SendBookingConfirmedUseCase;
 import com.cinebook.payment.infra.MockPaymentGateway;
 import com.cinebook.payment.infra.ProcessPaymentUseCase;
 import com.cinebook.payment.infra.ReconcilePaymentsUseCase;
@@ -39,7 +43,12 @@ import org.springframework.context.annotation.Import;
         SweepExpiredHoldsUseCase.class,
         RefundUseCase.class,
         ProcessPaymentUseCase.class,
-        ReconcilePaymentsUseCase.class
+        ReconcilePaymentsUseCase.class,
+        // Chuoi cho BookingEventListener
+        BookingQueryJdbc.class,
+        UserQueryJdbc.class,
+        LoggingEmailSender.class,
+        SendBookingConfirmedUseCase.class
 })
 public class WorkerBeans {
 }

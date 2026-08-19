@@ -33,12 +33,13 @@ class WorkerWiringTest extends AbstractWorkerTest {
     }
 
     /**
-     * Khoa lai mot cai bay da kiem chung bang thuc nghiem: co HAI application.yml tren
-     * classpath (mot cua worker, mot nam trong jar cua api), va Spring Boot chi doc mot.
-     * File cua api bi bo qua HOAN TOAN, khong mot dong canh bao.
+     * Worker doc cinebook-worker.yml, KHONG doc application.yml trong jar cua api.
      *
-     * Test nay ton tai de nguoi sau khong mat mot buoi chieu tu hoi vi sao property
-     * minh khai o ben api lai khong co tac dung o worker.
+     * Ban dau worker cung dung ten application.yml va dua vao viec file cua no dung truoc
+     * tren classpath. Thu tu classpath khong phai thu duoc bao dam: mot lan chay day du
+     * cua reactor da nap trung file cua api va test nay do voi
+     * "expected: null but was: doi-chuoi-nay-truoc-khi-deploy-that...". Doi ten file cau
+     * hinh khien tinh huong do khong con la kha nang nua.
      */
     @Test
     void worker_khong_thua_huong_cau_hinh_cua_api() {

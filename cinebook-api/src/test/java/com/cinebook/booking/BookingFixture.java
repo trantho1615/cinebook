@@ -19,7 +19,11 @@ import java.util.Map;
  * Moi test class cua milestone nay deu can dung bo du lieu nay, nen tach ra day
  * thay vi chep lai o sau cho.
  */
-final class BookingFixture {
+/**
+ * Public tu Milestone 6: test cua notification o package khac cung can dung mot suat
+ * chieu that voi ghe that. Chi lop nay va cac phuong thuc doc duoc mo, khong mo gi them.
+ */
+public final class BookingFixture {
 
     private static final String PASSWORD = "MatKhauRatManh123";
 
@@ -40,7 +44,7 @@ final class BookingFixture {
         this.seatIdByLabel = seatIdByLabel;
     }
 
-    static BookingFixture freshSetup(AbstractApiTest test, JdbcTemplate db) {
+    public static BookingFixture freshSetup(AbstractApiTest test, JdbcTemplate db) {
         db.execute("TRUNCATE TABLE outbox_events, audit_log, booking_items, seat_hold, bookings CASCADE");
         db.execute("TRUNCATE TABLE showtimes CASCADE");
         db.execute("TRUNCATE TABLE seats, rooms, cinemas CASCADE");
@@ -87,30 +91,30 @@ final class BookingFixture {
         return new BookingFixture(showtimeId, tokenA, tokenB, userIdA, userIdB, seatIdByLabel);
     }
 
-    String showtimeId() {
+    public String showtimeId() {
         return showtimeId;
     }
 
-    String tokenA() {
+    public String tokenA() {
         return tokenA;
     }
 
-    String tokenB() {
+    public String tokenB() {
         return tokenB;
     }
 
-    String userIdA() {
+    public String userIdA() {
         return userIdA;
     }
 
-    String userIdB() {
+    public String userIdB() {
         return userIdB;
     }
 
     /**
      * Doi nhan ghe nguoi doc duoc ("A1", "C7") thanh UUID that.
      */
-    List<String> seatIds(String... labels) {
+    public List<String> seatIds(String... labels) {
         return List.of(labels).stream()
                 .map(label -> {
                     String id = seatIdByLabel.get(label);

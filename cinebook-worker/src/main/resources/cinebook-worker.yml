@@ -21,16 +21,27 @@ spring:
         # Chan broker ghi trung khi producer retry. KHONG thay the duoc cho viec consumer
         # idempotent — chi giam so lan phai dung den no.
         enable.idempotence: true
+    consumer:
+      group-id: cinebook-worker
+      # Consumer moi doc tu dau topic thay vi bo qua nhung gi da co. An toan vi moi
+      # consumer o day deu idempotent.
+      auto-offset-reset: earliest
 
   data:
     redis:
       host: localhost
       port: 6379
 
-# LUU Y: application.yml cua cinebook-api nam trong jar va BI BO QUA HOAN TOAN — tren
-# classpath co hai file cung ten va Spring Boot chi doc mot (da kiem chung: getResource
-# tra ve file cua worker). Moi property ma bean duoc @Import can deu phai khai lai o day.
-# Thieu thi context chet ngay luc khoi dong voi loi placeholder, khong chay sai am tham.
+# File nay ten cinebook-worker.yml chu khong phai application.yml, va do la co y.
+#
+# cinebook-api nam tren classpath cua worker duoi dang thu vien, va trong jar cua no CO
+# mot application.yml. De hai file cung ten thi file nao thang phu thuoc thu tu classpath
+# — khong co gi bao dam, va da mot lan quan sat thay ket qua khac di giua hai lan chay.
+# Dat spring.config.name=cinebook-worker khien Spring Boot khong con coi application.yml
+# la ung vien nao ca: worker chi doc dung file nay.
+#
+# He qua: moi property ma bean duoc @Import can deu phai khai lai o day. Thieu thi context
+# chet ngay luc khoi dong voi loi placeholder, khong chay sai am tham.
 cinebook:
   payment:
     mock-base-url: https://sandbox.example.com
