@@ -1,4 +1,4 @@
-package com.cinebook.booking.infra;
+package com.cinebook.shared.audit;
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -8,6 +8,14 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Nam o shared chu khong o booking: bang audit_log hoan toan tong quat
+ * (aggregate_type, aggregate_id, action, actor_type), va payment cung phai ghi vao no
+ * khi hoan tien. Cung ly do voi shared/outbox.
+ *
+ * Bang duoc tao trong V7__booking.sql vi day la noi no ra doi; migration chi them chu
+ * khong sua, nen file khong doi ten theo.
+ */
 @Component
 public class AuditLogger {
 
