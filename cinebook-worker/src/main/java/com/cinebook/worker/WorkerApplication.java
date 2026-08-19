@@ -2,10 +2,9 @@ package com.cinebook.worker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
+// @EnableScheduling nam o SchedulingConfig chu khong o day — xem ly do trong file do.
 @SpringBootApplication
-@EnableScheduling
 public class WorkerApplication {
 
     public static void main(String[] args) {

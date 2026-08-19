@@ -41,7 +41,7 @@ final class BookingFixture {
     }
 
     static BookingFixture freshSetup(AbstractApiTest test, JdbcTemplate db) {
-        db.execute("TRUNCATE TABLE audit_log, booking_items, seat_hold, bookings CASCADE");
+        db.execute("TRUNCATE TABLE outbox_events, audit_log, booking_items, seat_hold, bookings CASCADE");
         db.execute("TRUNCATE TABLE showtimes CASCADE");
         db.execute("TRUNCATE TABLE seats, rooms, cinemas CASCADE");
         db.execute("TRUNCATE TABLE movie_genres, movies CASCADE");

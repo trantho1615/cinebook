@@ -26,6 +26,8 @@ cinebook:
   payment:
     mock-base-url: https://sandbox.example.com
     reconcile-after: 15m
+  worker:
+    sweep-interval: 30s
 
 server:
   port: 8081

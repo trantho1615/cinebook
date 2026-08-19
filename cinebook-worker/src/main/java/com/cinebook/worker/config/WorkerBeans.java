@@ -1,6 +1,7 @@
 package com.cinebook.worker.config;
 
 import com.cinebook.booking.infra.ConfirmBookingUseCase;
+import com.cinebook.booking.infra.SweepExpiredHoldsUseCase;
 import com.cinebook.payment.infra.MockPaymentGateway;
 import com.cinebook.payment.infra.ProcessPaymentUseCase;
 import com.cinebook.payment.infra.ReconcilePaymentsUseCase;
@@ -36,6 +37,7 @@ import org.springframework.context.annotation.Import;
         LoggingEventPublisher.class,
         OutboxRelay.class,
         ConfirmBookingUseCase.class,
+        SweepExpiredHoldsUseCase.class,
         RefundUseCase.class,
         ProcessPaymentUseCase.class,
         ReconcilePaymentsUseCase.class
