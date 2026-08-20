@@ -76,8 +76,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cinebook
       SPRING_DATA_REDIS_HOST: redis
       OTLP_ENDPOINT: http://jaeger:4318/v1/traces
-      CINEBOOK_JWT_SECRET: ${CINEBOOK_JWT_SECRET:-doi-chuoi-nay-truoc-khi-deploy-that-va-dai-toi-thieu-32-byte}
-      CINEBOOK_WEBHOOK_SECRET: ${CINEBOOK_WEBHOOK_SECRET:-doi-chuoi-nay-truoc-khi-deploy-that}
+      # De trong thi ung dung tu sinh bi mat ngau nhien cho lan chay nay va canh bao.
+      # Khong de chuoi bi mat nao trong file duoc commit.
+      CINEBOOK_JWT_SECRET: ${CINEBOOK_JWT_SECRET:-}
+      CINEBOOK_WEBHOOK_SECRET: ${CINEBOOK_WEBHOOK_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy

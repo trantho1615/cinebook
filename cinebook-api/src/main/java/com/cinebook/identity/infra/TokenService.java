@@ -4,6 +4,7 @@ import com.cinebook.identity.domain.Role;
 import com.cinebook.identity.domain.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import com.cinebook.shared.config.SecretResolver;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,9 @@ public class TokenService {
 
     public TokenService(@Value("${cinebook.jwt.secret}") String secret,
                         @Value("${cinebook.jwt.access-ttl}") Duration accessTtl) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(SecretResolver
+                .hoacSinhNgauNhien(secret, "CINEBOOK_JWT_SECRET")
+                .getBytes(StandardCharsets.UTF_8));
         this.accessTtl = accessTtl;
     }
 

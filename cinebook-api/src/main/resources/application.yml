@@ -27,9 +27,12 @@ spring:
 
 cinebook:
   jwt:
-    # HS256 yeu cau khoa toi thieu 256 bit (32 byte). Gia tri mac dinh chi dung cho
-    # may lap trinh vien; moi trien khai that phai dat bien moi truong CINEBOOK_JWT_SECRET.
-    secret: ${CINEBOOK_JWT_SECRET:doi-chuoi-nay-truoc-khi-deploy-that-va-dai-toi-thieu-32-byte}
+    # KHONG co gia tri mac dinh trong ma nguon.
+    #
+    # De trong thi SecretResolver sinh mot bi mat ngau nhien cho lan chay nay va canh bao to.
+    # Tien khi phat trien, va khong the vo tinh mang ra that vi token khong song qua lan khoi
+    # dong sau. Profile prod doi bien nay bat buoc phai co.
+    secret: ${CINEBOOK_JWT_SECRET:}
     access-ttl: 15m
     refresh-ttl: 7d
 
@@ -43,7 +46,7 @@ cinebook:
 
   payment:
     mock-base-url: https://sandbox.example.com
-    webhook-secret: ${CINEBOOK_WEBHOOK_SECRET:doi-chuoi-nay-truoc-khi-deploy-that}
+    webhook-secret: ${CINEBOOK_WEBHOOK_SECRET:}
     reconcile-after: 15m
 
 server:

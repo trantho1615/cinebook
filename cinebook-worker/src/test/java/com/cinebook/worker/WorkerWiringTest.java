@@ -38,7 +38,7 @@ class WorkerWiringTest extends AbstractWorkerTest {
      * Ban dau worker cung dung ten application.yml va dua vao viec file cua no dung truoc
      * tren classpath. Thu tu classpath khong phai thu duoc bao dam: mot lan chay day du
      * cua reactor da nap trung file cua api va test nay do voi
-     * "expected: null but was: doi-chuoi-nay-truoc-khi-deploy-that...". Doi ten file cau
+     * "expected: null but was: <gia tri mac dinh cua api>". Doi ten file cau
      * hinh khien tinh huong do khong con la kha nang nua.
      */
     @Test

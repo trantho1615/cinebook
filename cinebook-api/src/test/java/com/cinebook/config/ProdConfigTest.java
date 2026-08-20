@@ -25,10 +25,10 @@ class ProdConfigTest extends AbstractIntegrationTest {
     /**
      * Thieu bi mat thi PHAI chet ngay luc khoi dong.
      *
-     * application.yml co gia tri mac dinh CHAY DUOC:
-     *   secret: ${CINEBOOK_JWT_SECRET:doi-chuoi-nay-truoc-khi-deploy-that-va-dai-toi-thieu-32-byte}
-     * Nghia la mot lan deploy quen dat bien moi truong se len hoan toan binh thuong — va bat
-     * ky ai doc repo tren GitHub cung ky duoc token gia cho bat ky tai khoan nao.
+     * application.yml TUNG mang mot gia tri mac dinh chay duoc, nghia la mot lan deploy quen
+     * dat bien moi truong se len hoan toan binh thuong — va bat ky ai doc repo tren GitHub
+     * cung ky duoc token gia cho bat ky tai khoan nao. Gio no de trong va SecretResolver sinh
+     * mot bi mat ngau nhien cho lan chay, con profile prod thi doi bat buoc phai co bien.
      *
      * Profile prod bo gia tri mac dinh di, nen thieu bien la Spring nem loi placeholder.
      */
