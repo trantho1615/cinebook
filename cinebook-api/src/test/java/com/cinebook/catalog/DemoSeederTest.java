@@ -70,6 +70,27 @@ class DemoSeederTest extends AbstractIntegrationTest {
     }
 
     /**
+     * Mot suat chieu le loi trong tuong lai KHONG duoc chan viec nap lai.
+     *
+     * Phat hien khi chay that chu khong phai khi chay test: DB demo con dung mot suat (do
+     * tay tao luc tham do API), seeder thay "van con suat trong tuong lai" roi bo qua, va
+     * ban demo mo len voi 1 suat tren tong 253.
+     */
+    @Test
+    void mot_suat_le_loi_khong_chan_viec_nap_lai() {
+        db.update("UPDATE showtimes SET start_at = start_at - interval '30 days', "
+                + "end_at = end_at - interval '30 days'");
+        db.update("UPDATE showtimes SET start_at = now() + interval '2 days', "
+                + "end_at = now() + interval '2 days 2 hours' "
+                + "WHERE id = (SELECT id FROM showtimes LIMIT 1)");
+        assertThat(soSuatTrongTuongLai()).isEqualTo(1);
+
+        seeder.run(null);
+
+        assertThat(soSuatTrongTuongLai()).isGreaterThan(1);
+    }
+
+    /**
      * Nap lai lich chieu KHONG duoc xoa lich cu: bookings va seat_hold co the dang tham
      * chieu toi chung, va mot rap co lich chieu qua khu la chuyen binh thuong.
      */
