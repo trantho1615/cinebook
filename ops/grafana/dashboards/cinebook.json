@@ -155,7 +155,7 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Ghe sweeper nha",
+      "title": "Ghe sweeper da nha (cong don)",
       "gridPos": {
         "h": 6,
         "w": 6,
@@ -170,8 +170,8 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(cinebook_sweeper_released_total[5m]))",
-          "legendFormat": "5 phut qua",
+          "expr": "sum(cinebook_sweeper_released_total)",
+          "legendFormat": "tong so ghe",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
