@@ -1,5 +1,6 @@
 package com.cinebook.payment.infra;
 
+import com.cinebook.shared.config.SecretResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +24,9 @@ public class WebhookSignature {
     private final byte[] secret;
 
     public WebhookSignature(@Value("${cinebook.payment.webhook-secret}") String secret) {
-        this.secret = secret.getBytes(StandardCharsets.UTF_8);
+        this.secret = SecretResolver
+                .hoacSinhNgauNhien(secret, "CINEBOOK_WEBHOOK_SECRET")
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     public String sign(String rawBody) {
