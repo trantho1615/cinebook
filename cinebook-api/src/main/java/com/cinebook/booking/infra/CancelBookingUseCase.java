@@ -3,6 +3,7 @@ package com.cinebook.booking.infra;
 import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.identity.api.AccessControl;
 import com.cinebook.shared.audit.AuditLogger;
+import com.cinebook.shared.realtime.SeatMapChannel;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -32,15 +33,25 @@ public class CancelBookingUseCase {
                AND status = 'PENDING'
             """;
 
+    private static final String SQL_SEAT_MAP_INFO = """
+            SELECT b.showtime_id::text AS showtime_id, i.seat_label
+              FROM bookings b
+              JOIN booking_items i ON i.booking_id = b.id
+             WHERE b.id = CAST(:bookingId AS uuid)
+             ORDER BY i.seat_label
+            """;
+
     private final NamedParameterJdbcTemplate jdbc;
     private final AccessControl accessControl;
     private final AuditLogger auditLogger;
+    private final SeatMapChannel seatMapChannel;
 
     public CancelBookingUseCase(NamedParameterJdbcTemplate jdbc, AccessControl accessControl,
-                                AuditLogger auditLogger) {
+                                AuditLogger auditLogger, SeatMapChannel seatMapChannel) {
         this.jdbc = jdbc;
         this.accessControl = accessControl;
         this.auditLogger = auditLogger;
+        this.seatMapChannel = seatMapChannel;
     }
 
     @Transactional
@@ -62,5 +73,12 @@ public class CancelBookingUseCase {
 
         auditLogger.record("BOOKING", bookingId, "CANCELLED",
                 AuditLogger.ActorType.USER, owners.getFirst(), "{}");
+
+        var rows = jdbc.query(SQL_SEAT_MAP_INFO, params,
+                (rs, n) -> new String[]{rs.getString("showtime_id"), rs.getString("seat_label")});
+        if (!rows.isEmpty()) {
+            seatMapChannel.seatsChanged(UUID.fromString(rows.getFirst()[0]), "RELEASED",
+                    rows.stream().map(row -> row[1]).toList());
+        }
     }
 }

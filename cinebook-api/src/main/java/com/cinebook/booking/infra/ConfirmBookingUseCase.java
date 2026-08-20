@@ -5,6 +5,7 @@ import com.cinebook.booking.api.HoldExpiredException;
 import com.cinebook.booking.domain.TicketCode;
 import com.cinebook.shared.audit.AuditLogger;
 import com.cinebook.shared.outbox.OutboxWriter;
+import com.cinebook.shared.realtime.SeatMapChannel;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -58,15 +59,25 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
                AND status = 'PENDING'
             """;
 
+    private static final String SQL_SEAT_MAP_INFO = """
+            SELECT b.showtime_id::text AS showtime_id, i.seat_label
+              FROM bookings b
+              JOIN booking_items i ON i.booking_id = b.id
+             WHERE b.id = CAST(:bookingId AS uuid)
+             ORDER BY i.seat_label
+            """;
+
     private final NamedParameterJdbcTemplate jdbc;
     private final AuditLogger auditLogger;
     private final OutboxWriter outbox;
+    private final SeatMapChannel seatMapChannel;
 
     public ConfirmBookingUseCase(NamedParameterJdbcTemplate jdbc, AuditLogger auditLogger,
-                                 OutboxWriter outbox) {
+                                 OutboxWriter outbox, SeatMapChannel seatMapChannel) {
         this.jdbc = jdbc;
         this.auditLogger = auditLogger;
         this.outbox = outbox;
+        this.seatMapChannel = seatMapChannel;
     }
 
     /**
@@ -108,6 +119,8 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
         auditLogger.record("BOOKING", bookingId, "CONFIRMED",
                 AuditLogger.ActorType.SYSTEM, null,
                 "{\"paymentId\":\"" + paymentId + "\"}");
+
+        baoSoDoGheDoi(bookingId, "BOOKED");
     }
 
     @Override
@@ -123,5 +136,18 @@ public class ConfirmBookingUseCase implements BookingConfirmation {
 
         auditLogger.record("BOOKING", bookingId, "PAYMENT_FAILED",
                 AuditLogger.ActorType.SYSTEM, null, "{}");
+
+        baoSoDoGheDoi(bookingId, "RELEASED");
+    }
+
+    private void baoSoDoGheDoi(UUID bookingId, String status) {
+        var rows = jdbc.query(SQL_SEAT_MAP_INFO,
+                new MapSqlParameterSource().addValue("bookingId", bookingId.toString()),
+                (rs, n) -> new String[]{rs.getString("showtime_id"), rs.getString("seat_label")});
+        if (rows.isEmpty()) {
+            return;
+        }
+        seatMapChannel.seatsChanged(UUID.fromString(rows.getFirst()[0]), status,
+                rows.stream().map(row -> row[1]).toList());
     }
 }

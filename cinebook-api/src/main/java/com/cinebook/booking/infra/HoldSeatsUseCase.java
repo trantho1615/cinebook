@@ -8,6 +8,7 @@ import com.cinebook.catalog.api.SeatView;
 import com.cinebook.catalog.api.ShowtimeDetail;
 import com.cinebook.catalog.api.ShowtimeQuery;
 import com.cinebook.shared.audit.AuditLogger;
+import com.cinebook.shared.realtime.SeatMapChannel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -98,17 +99,20 @@ public class HoldSeatsUseCase {
     private final NamedParameterJdbcTemplate jdbc;
     private final ShowtimeQuery showtimeQuery;
     private final AuditLogger auditLogger;
+    private final SeatMapChannel seatMapChannel;
     private final Duration holdTtl;
     private final int maxSeatsPerHold;
 
     public HoldSeatsUseCase(NamedParameterJdbcTemplate jdbc,
                             ShowtimeQuery showtimeQuery,
                             AuditLogger auditLogger,
+                            SeatMapChannel seatMapChannel,
                             @Value("${cinebook.booking.hold-ttl}") Duration holdTtl,
                             @Value("${cinebook.booking.max-seats-per-hold}") int maxSeatsPerHold) {
         this.jdbc = jdbc;
         this.showtimeQuery = showtimeQuery;
         this.auditLogger = auditLogger;
+        this.seatMapChannel = seatMapChannel;
         this.holdTtl = holdTtl;
         this.maxSeatsPerHold = maxSeatsPerHold;
     }
@@ -188,8 +192,10 @@ public class HoldSeatsUseCase {
                 AuditLogger.ActorType.USER, userId,
                 "{\"seatCount\":" + chosen.size() + ",\"totalAmount\":" + totalAmount + "}");
 
-        return new HoldResult(bookingId, code, totalAmount, expiresAt,
-                chosen.stream().map(SeatView::label).toList());
+        List<String> labels = chosen.stream().map(SeatView::label).toList();
+        seatMapChannel.seatsChanged(showtimeId, "HELD", labels);
+
+        return new HoldResult(bookingId, code, totalAmount, expiresAt, labels);
     }
 
     private void validateSelectionSize(List<UUID> seatIds) {
