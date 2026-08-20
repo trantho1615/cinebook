@@ -43,16 +43,86 @@ services:
       # CONTROLLER bind vao localhost chu khong phai 0.0.0.0: Kafka 3.9 suy ra dia chi
       # quang ba cua controller tu listeners khi advertised.listeners khong khai bao no,
       # va tu choi khoi dong neu dia chi do la 0.0.0.0. Node don nen controller chi can loopback.
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # HAI listener cho hai loai client:
+      #   HOST      -> ung dung chay tren may that, ket noi qua localhost:9092
+      #   INTERNAL  -> container khac trong cung mang compose, ket noi qua kafka:29092
+      # Chi mot listener quang ba "localhost" thi container khac se nhan duoc dia chi
+      # localhost va tu ket noi vao chinh no — hong ngay khi dua ung dung vao compose.
+      KAFKA_LISTENERS: HOST://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: HOST:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  # Hai service nay mang profile "full" nen "docker compose up" mac dinh van chi chay ha
+  # tang — lap trinh vien sua code khong phai build image moi lan.
+  api:
+    build:
+      context: .
+      dockerfile: cinebook-api/Dockerfile
+    container_name: cinebook-api
+    profiles: ["full"]
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-demo}
+      # Trong compose khong con localhost: dung ten service.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cinebook
+      SPRING_DATA_REDIS_HOST: redis
+      OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      CINEBOOK_JWT_SECRET: ${CINEBOOK_JWT_SECRET:-doi-chuoi-nay-truoc-khi-deploy-that-va-dai-toi-thieu-32-byte}
+      CINEBOOK_WEBHOOK_SECRET: ${CINEBOOK_WEBHOOK_SECRET:-doi-chuoi-nay-truoc-khi-deploy-that}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        # Khong doi healthy (jaeger khong khai healthcheck), chi doi no ton tai de exporter
+        # OTLP khong nem mot chuoi ConnectException luc khoi dong.
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8090/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 40s
+
+  worker:
+    build:
+      context: .
+      dockerfile: cinebook-worker/Dockerfile
+    container_name: cinebook-worker
+    profiles: ["full"]
+    ports:
+      - "8081:8081"
+      - "8091:8091"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cinebook
+      SPRING_DATA_REDIS_HOST: redis
+      # 29092 chu khong phai 9092: xem chu thich o service kafka.
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        # Worker khong migrate schema (api so huu), nen phai doi api chay Flyway xong.
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8091/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 40s
 
   prometheus:
     image: prom/prometheus:v3.8.0

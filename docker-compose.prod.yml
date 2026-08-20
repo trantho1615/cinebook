@@ -1,0 +1,112 @@
+# Lop chong len docker-compose.yml cho moi truong that.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full up -d
+#
+# File goc dung cho may ca nhan: mo het cong ra ngoai cho tien. File nay dong lai dung
+# nhung cho khong duoc phep ho khi may nam tren Internet.
+
+services:
+  # ---- Ha tang: KHONG mo cong nao ra ngoai ----
+  #
+  # Postgres voi mat khau cinebook/cinebook, Redis khong mat khau, Kafka khong xac thuc.
+  # Bot quet cac cong nay lien tuc; mo ra la mat database trong vai gio. Cac container
+  # trong cung mang compose van goi nhau binh thuong qua ten service.
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 512m
+
+  redis:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 128m
+
+  kafka:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 1g
+
+  # ---- Giam sat: chi nghe tren localhost, xem qua SSH tunnel ----
+  #
+  #   ssh -L 3000:localhost:3000 -L 9090:localhost:9090 -L 16686:localhost:16686 ubuntu@may-cua-ban
+  prometheus:
+    ports: !override
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+    mem_limit: 384m
+    volumes:
+      # Ban prod scrape ten service trong mang compose, khong phai host.docker.internal.
+      - ./ops/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+
+  grafana:
+    ports: !override
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      # Ban goc bat anonymous VOI QUYEN ADMIN cho tien khi demo tren may. Public ma de nguyen
+      # la trao dashboard cho nguoi la.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?can dat trong .env}
+
+  jaeger:
+    ports: !override
+      - "127.0.0.1:16686:16686"
+    restart: unless-stopped
+    mem_limit: 512m
+
+  # ---- Ung dung: khong mo thang ra ngoai, Caddy dung truoc ----
+  api:
+    ports: !override
+      # 8080 chi mo cho localhost de Caddy va viec chan doan goi duoc; 8090 la cong quan tri.
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8090:8090"
+    restart: unless-stopped
+    mem_limit: 1g
+    environment:
+      # prod  = nghiem ngat ve bi mat, khong nap du lieu mau
+      # demo  = nap lich chieu de nguoi vao xem co cai ma bam
+      # Ghep hai cai la mot quyet dinh tuong minh: ban public NAY LA mot ban demo.
+      SPRING_PROFILES_ACTIVE: prod,demo
+      # Hai JVM tren mot may 4 GB. Khong ghim thi ca hai cung tuong minh co ca 4 GB va
+      # OOM killer se chon ngau nhien mot cai de giet.
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60"
+      # Dau ? nghia la thieu bien thi compose tu choi khoi dong, thay vi chay bang gia tri
+      # mac dinh ai cung doc duoc trong repo.
+      CINEBOOK_JWT_SECRET: ${CINEBOOK_JWT_SECRET:?can dat trong .env}
+      CINEBOOK_WEBHOOK_SECRET: ${CINEBOOK_WEBHOOK_SECRET:?can dat trong .env}
+
+  worker:
+    ports: !override
+      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:8091:8091"
+    restart: unless-stopped
+    mem_limit: 900m
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60"
+
+  # ---- Caddy: thu duy nhat mo ra Internet ----
+  caddy:
+    image: caddy:2-alpine
+    container_name: cinebook-caddy
+    profiles: ["full"]
+    restart: unless-stopped
+    mem_limit: 128m
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?can dat ten mien trong .env}
+    volumes:
+      - ./ops/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - api
+
+volumes:
+  caddydata:
+  caddyconfig:

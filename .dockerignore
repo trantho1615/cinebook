@@ -1,0 +1,14 @@
+# Build context cang nho thi build cang nhanh, va target/ thi Docker se tu build lai ben
+# trong image chu khong dung ban tren may.
+target/
+*/target/
+.git/
+.github/
+.idea/
+.vscode/
+.claude/
+docs/
+load-test/
+ops/grafana/dashboards/*.jpg
+*.log
+.env

@@ -16,14 +16,16 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 public abstract class AbstractIntegrationTest {
 
     @ServiceConnection
-    static final PostgreSQLContainer POSTGRES =
+    // protected: ProdConfigTest o package khac can dia chi container de dung mot context
+    // rieng voi profile prod.
+    protected static final PostgreSQLContainer POSTGRES =
             new PostgreSQLContainer("postgres:18-alpine");
 
     // Testcontainers 2.x khong con module rieng cho Redis, nen dung GenericContainer.
     // Tham so name = "redis" la thu giup Spring Boot biet day la Redis de tu dien
     // spring.data.redis.host va .port.
     @ServiceConnection(name = "redis")
-    static final GenericContainer<?> REDIS =
+    protected static final GenericContainer<?> REDIS =
             new GenericContainer<>("redis:8-alpine").withExposedPorts(6379);
 
     static {

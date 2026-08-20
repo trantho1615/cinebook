@@ -2,110 +2,137 @@
 
 ![CI](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml/badge.svg)
 
-He thong dat ve xem phim. Backend Java 25 + Spring Boot 4, tap trung vao ba bai toan:
-tranh chap ghe dong thoi, thanh toan bat dong bo, va observability co so lieu.
+He thong dat ve xem phim, Java 25 + Spring Boot 4. Du an tap trung vao ba bai toan **khong
+giai duoc bang CRUD**: tranh chap ghe khi nhieu nguoi cung bam, thanh toan bat dong bo voi
+webhook den tre hoac khong den, va tim diem nghen bang so lieu thay vi bang linh cam.
 
-Thiet ke chi tiet: [docs/specs/2026-08-11-cinebook-core-design.md](docs/specs/2026-08-11-cinebook-core-design.md)
+![Dashboard trong luc do tai](docs/images/grafana-flash-sale.jpg)
 
-## Yeu cau
+## Ba con so
+
+| | |
+|---|---|
+| **200 luong** cung gianh mot ghe | dung **1** thanh cong, 199 nhan 409, **0** loi khac |
+| seat map duoi tai (p95) | **1,05 s → 34 ms** sau khi do va toi uu (30 lan) |
+| **171 test** tren PostgreSQL that | khong dung H2, khong mock database |
+
+Moi bat bien quan trong deu co test **da tung thay do**: truoc khi tin mot luoi an toan,
+toi go no ra de xem thu co that su rach khong.
+
+## Chay thu
+
+Chi can Docker. Khong can cai Java hay Maven.
+
+```bash
+git clone https://github.com/trantho1615/cinebook && cd cinebook
+cp .env.example .env
+docker compose --profile full up --build
+```
+
+Roi mo **http://localhost:8080**, bam "Dung tai khoan demo".
+
+Muon thay phan hay nhat: mo **hai cua so** cung mot suat chieu, giu ghe o cua so nay va
+nhin cua so kia doi mau ngay lap tuc.
+
+| | Dia chi |
+|---|---|
+| UI | http://localhost:8080 |
+| Grafana | http://localhost:3000 (dashboard "cinebook" nap san tu repo) |
+| Prometheus | http://localhost:9090 |
+| Jaeger | http://localhost:16686 |
+
+## Kien truc
+
+```
+                     ┌──────────────────────────────┐
+   trinh duyet ──────│   cinebook-api (monolith)    │
+   REST + WebSocket  │  identity │ catalog │ booking │
+   cong thanh toan ──│  payment  │ notification      │
+        webhook      └───┬──────────┬────────┬───────┘
+                         │          │        │
+                  PostgreSQL 18  Redis 8   Kafka
+                    (nguon      (pub/sub   (outbox relay)
+                     su that)    realtime)      │
+                                                ▼
+                                    ┌──────────────────┐
+                                    │ cinebook-worker  │
+                                    │ sweeper, relay,  │
+                                    │ doi soat, email  │
+                                    └──────────────────┘
+```
+
+Hai deployable. **Worker chet thi he thong van ban duoc ve** — chi mat tinh kip thoi cua
+viec don dep va gui thong bao. Do khong phai loi hua suong, co test giu no.
+
+Hai luat kien truc duoc ep o tang build:
+
+- Module chi duoc phu thuoc vao package `api` cua module khac (`ModuleBoundaryTest`)
+- Worker khong duoc khai bao `@RestController` (`WorkerApplicationTest`)
+
+**[→ Doc tai lieu kien truc](docs/kien-truc.md)** — sau van de, moi van de kem link toi test
+chung minh, va danh sach nhung gi co y chua lam.
+
+## Danh cho nguoi muon sua code
+
+<details>
+<summary>Chay bang Maven, chay test, do tai</summary>
+
+### Yeu cau
 
 | | Ban |
 |---|---|
-| JDK | 25 (LTS) |
+| JDK | 25 (LTS), `JAVA_HOME` phai tro dung |
 | Maven | 3.9+ |
 | Docker + Compose | bat buoc, ke ca khi chi chay test |
 
-`JAVA_HOME` phai tro toi JDK 25. Kiem tra:
+### Chay khi dang sua code
 
-```bash
-"$JAVA_HOME/bin/java" -version    # phai ra 25.x
-```
-
-## Chay local
+Chi bat ha tang, chay ung dung tu IDE hoac Maven — khong phai build image moi lan:
 
 ```bash
 docker compose up -d
 
-mvn -B -pl cinebook-api    spring-boot:run   # cong 8080
-mvn -B -pl cinebook-worker spring-boot:run   # cong 8081
+mvn -B -pl cinebook-api    spring-boot:run -Dspring-boot.run.profiles=demo   # 8080
+mvn -B -pl cinebook-worker spring-boot:run                                   # 8081
 ```
 
-Health check nam tren CONG QUAN TRI, khong phai cong nghiep vu:
+**Build truoc khi chay worker phai la `mvn clean install`, KHONG phai `mvn package`.** Fat
+jar cua worker goi `cinebook-api` lay tu `~/.m2`, nen `package` co the dong goi mot ban api
+cu ma khong bao gi — worker se chay code cu va chi lech hanh vi. Dung moi tien trinh java
+truoc khi `clean`: Windows khoa file jar.
 
-- api: http://localhost:8090/actuator/health
-- worker: http://localhost:8091/actuator/health
+### Cong quan tri tach rieng
 
-Cong 8080/8081 chi phuc vu nghiep vu. Actuator tach sang 8090/8091 vi
-/actuator/prometheus ke ten endpoint, so nguoi dung va nhip giao dich — no thuoc ve mang
-noi bo chu khong phai Internet.
+Health va metric nam o **8090** (api) va **8091** (worker), khong phai 8080/8081.
+`/actuator/prometheus` ke ten endpoint, so nguoi dung va nhip giao dich — no thuoc ve mang
+noi bo. Co test khang dinh cong nghiep vu khong lo metric.
 
-Giam sat: Prometheus http://localhost:9090, Grafana http://localhost:3000 (dashboard
-"cinebook" nap san tu ops/grafana/dashboards), Jaeger http://localhost:16686.
-
-Build truoc khi chay worker phai la `mvn clean install`, KHONG phai `mvn package`: fat jar
-cua worker goi cinebook-api lay tu ~/.m2, nen `package` co the dong goi mot ban api cu ma
-khong bao gi. Dung moi tien trinh java dang chay truoc khi `clean` — Windows khoa file jar.
-
-Do tai: xem `load-test/README.md` va so lieu o `docs/ket-qua-do-tai.md`.
-
-Ket qua dang chu y nhat: seat map p95 **1,05 s -> 34 ms** (30 lan) sau khi bo mot vong lap
-doc bang gia 96 lan moi request. Duong giu ghe cung nhanh len 4,6 lan du khong sua dong nao
-cua no — nut that la connection pool dung chung.
-
-![Dashboard trong luc do tai](docs/images/grafana-flash-sale.jpg)
-
-### Chay voi du lieu mau
-
-```bash
-mvn -B -pl cinebook-api spring-boot:run -Dspring-boot.run.profiles=demo
-```
-
-Nap 10 phim, 3 rap, 9 phong (96 ghe moi phong) va 252 suat chieu trong 7 ngay toi.
-Bo nap la idempotent: chay lai khong tao du lieu trung.
-
-Thu nhanh:
-
-```bash
-curl "http://localhost:8080/movies?status=NOW_SHOWING"
-curl "http://localhost:8080/showtimes?city=Ho%20Chi%20Minh&district=Quan%201"
-```
-
-## Chay test
+### Chay test
 
 ```bash
 mvn -B verify
 ```
 
 Integration test chay tren PostgreSQL 18 that qua Testcontainers, **khong dung H2** —
-partial index, `EXCLUDE USING gist` va `FOR UPDATE SKIP LOCKED` la nen tang cua thiet ke
-nay va H2 khong ho tro chung. Lan chay dau se mat them thoi gian de keo image
-`postgres:18-alpine`.
+partial index, `EXCLUDE USING gist` va `FOR UPDATE SKIP LOCKED` la nen tang cua thiet ke nay
+va H2 khong ho tro chung.
 
-Bo test khong phu thuoc `docker compose`: no tu dung container rieng, nen chay duoc
-tren may sach va tren CI.
+Chay `clean verify` **khi da tat `docker compose`**: mot lan Milestone 6 co test xanh gia vi
+Redis cua compose dang chay, va CI moi bat duoc.
 
-## Cau truc
+### Do tai
 
-| Module | Vai tro |
-|---|---|
-| `common` | Contract dung chung giua cac deployable |
-| `cinebook-api` | Phuc vu REST va WebSocket, cong 8080 |
-| `cinebook-worker` | Scheduled job va Kafka consumer, cong 8081, khong co endpoint nghiep vu |
+Kich ban k6 flash sale: [`load-test/README.md`](load-test/README.md).
+So lieu day du kem dieu kien do: [`docs/ket-qua-do-tai.md`](docs/ket-qua-do-tai.md).
 
-Hai luat kien truc duoc ep o tang build, khong dua vao ky luat ca nhan:
-
-- Module chi duoc phu thuoc vao package `api` cua module khac (`ModuleBoundaryTest`)
-- `cinebook-worker` khong duoc khai bao `@RestController` hay `@Controller` (`WorkerApplicationTest`)
-
-## Ha tang local
-
-| Service | Ban | Cong |
-|---|---|---|
-| PostgreSQL | 18-alpine | 5432 |
-| Redis | 8-alpine | 6379 |
-| Kafka | 4.3.1 (KRaft) | 9092 |
+</details>
 
 ## Tai lieu
 
-- [Thiet ke core booking (phase 1)](docs/specs/2026-08-11-cinebook-core-design.md)
-- [Ke hoach milestone 1 — nen mong](docs/plans/2026-08-11-m1-foundation.md)
+- [Kien truc — sau van de va cach giai](docs/kien-truc.md)
+- [Thiet ke chi tiet (spec goc)](docs/specs/2026-08-11-cinebook-core-design.md)
+- [Ket qua do tai truoc/sau](docs/ket-qua-do-tai.md)
+- [Kich ban video demo](docs/kich-ban-demo.md)
+- [Huong dan deploy len AWS](docs/huong-dan-deploy.md)
+- [Ke hoach tung milestone](docs/plans/) — chin milestone, moi cai ghi lai ca nhung cho lam
+  sai va cach phat hien ra
