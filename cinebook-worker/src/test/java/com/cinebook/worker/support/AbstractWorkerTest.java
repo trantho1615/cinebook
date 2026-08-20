@@ -1,6 +1,7 @@
 package com.cinebook.worker.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -14,7 +15,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * Flyway bat lai o day: worker chay that KHONG migrate (cinebook-api so huu schema),
  * nhung container test la DB trang nen phai co ai do dung schema len.
  */
-@SpringBootTest(properties = {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         // Giong main(): worker doc cinebook-worker.yml, khong doc application.yml
         "spring.config.name=cinebook-worker",
         "spring.flyway.enabled=true"
@@ -22,6 +23,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 // Profile "test" tat lich chay job — xem SchedulingConfig.
 @ActiveProfiles("test")
 public abstract class AbstractWorkerTest {
+
+    @LocalServerPort
+    protected int port;
+
 
     static final PostgreSQLContainer POSTGRES =
             new PostgreSQLContainer("postgres:18-alpine");
