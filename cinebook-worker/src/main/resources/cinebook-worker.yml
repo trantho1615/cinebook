@@ -55,6 +55,18 @@ server:
   port: 8081
 
 management:
+  health:
+    # Worker cham toi Redis DUY NHAT qua SeatMapChannel, va cho do da nuot loi: mat Redis
+    # thi chi mat realtime, sweeper va relay van chay. De health indicator mac dinh bat
+    # thi mot nhip Redis chap chon se lam /actuator/health tra 503 va orchestrator kill
+    # mot tien trinh dang lam viec binh thuong.
+    #
+    # CI phat hien dieu nay: tren runner khong co Redis, health tra 503 va WorkerSecurityTest
+    # do. Tren may lap trinh vien no xanh chi vi docker compose dang chay — dung loai xanh
+    # gia da gap o Milestone 1.
+    redis:
+      enabled: false
+
   endpoints:
     web:
       exposure:
