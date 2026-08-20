@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Them traceId va spanId vao moi dong log.
+
+  Gia tri that: mot request loi trong log cho ra traceId, dan vao Jaeger la thay toan bo
+  duong di — ke ca doan chay o tien trinh kia. Khong co no thi viec dieu tra la doc log hai
+  tien trinh roi ghep bang mat theo dau thoi gian.
+
+  MDC key la "traceId"/"spanId" do Micrometer Tracing dat vao; %X lay tu do ra.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

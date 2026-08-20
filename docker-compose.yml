@@ -85,6 +85,13 @@ services:
     depends_on:
       - prometheus
 
+  jaeger:
+    image: jaegertracing/jaeger:2.11.0
+    container_name: cinebook-jaeger
+    ports:
+      - "16686:16686"   # giao dien
+      - "4318:4318"     # OTLP qua HTTP — hai deployable day trace vao day
+
 volumes:
   pgdata:
   redisdata:

@@ -40,7 +40,13 @@ Cong 8080/8081 chi phuc vu nghiep vu. Actuator tach sang 8090/8091 vi
 noi bo chu khong phai Internet.
 
 Giam sat: Prometheus http://localhost:9090, Grafana http://localhost:3000 (dashboard
-"cinebook" nap san tu ops/grafana/dashboards).
+"cinebook" nap san tu ops/grafana/dashboards), Jaeger http://localhost:16686.
+
+Build truoc khi chay worker phai la `mvn clean install`, KHONG phai `mvn package`: fat jar
+cua worker goi cinebook-api lay tu ~/.m2, nen `package` co the dong goi mot ban api cu ma
+khong bao gi. Dung moi tien trinh java dang chay truoc khi `clean` — Windows khoa file jar.
+
+Do tai: xem `load-test/README.md` va so lieu o `docs/ket-qua-do-tai.md`.
 
 ### Chay voi du lieu mau
 

@@ -129,3 +129,32 @@ Bỏ 96 lượt truy vấn mỗi request khiến connection không còn là hàn
 - **Tỉ lệ xung đột 95,9 % là do kịch bản cố ý dựng**: 10 VU giành 24 ghế. Nó không nói lên rằng hệ thống thật sẽ có 96 % người dùng thất bại — nó nói rằng đường tranh chấp vẫn giữ đúng bất biến dưới áp lực cực đại, và không có lỗi 5xx nào.
 - **409 không được tính là lỗi.** Lần chạy đầu tiên tôi đặt `responseCallback` sai chỗ và k6 báo `http_req_failed = 26,97 %` — đúng bằng số lượt 409. Con số đó vô nghĩa. Cách đúng là `http.setResponseCallback()` ở init context.
 - **Độ trễ seat map dao động đáng kể giữa các lần chạy** (p95 594 ms → 908 ms → 1,05 s trên cùng cấu hình). Máy này chạy cả hạ tầng lẫn ứng dụng lẫn bộ sinh tải, nên nhiễu là điều phải chấp nhận. Vì vậy phần "sau khi tối ưu" phải đo lại **cùng máy, cùng lúc, cùng kịch bản**, và nên chạy vài lần rồi lấy khoảng.
+
+
+## Trace phân tán
+
+Sau khi bật OpenTelemetry, Jaeger nhận trace từ cả hai deployable (`cinebook-api`, `cinebook-worker`), và mọi dòng log mang `traceId`/`spanId` — dán id từ log vào Jaeger là thấy đường đi.
+
+**Nối được:** `outboxRelayJob.relay` → `booking.events send` → `booking.events process` nằm trong **cùng một trace**:
+
+```
+task outboxRelayJob.relay   150,87 ms
+  booking.events send        77,40 ms   (producer)
+  booking.events process     34,67 ms   (consumer)
+```
+
+Chỉ có được sau khi bật `spring.kafka.template.observation-enabled` và `spring.kafka.listener.observation-enabled`. Không bật thì producer và consumer là hai trace rời rạc.
+
+**KHÔNG nối được — và đây là hệ quả trực tiếp của thiết kế outbox:** request HTTP ban đầu (`POST /demo/payments/{id}/succeed`) không nối với trace của relay. Lý do: outbox **cố ý cắt** chuỗi đồng bộ — api chỉ ghi một dòng vào bảng và commit; một tiến trình khác đọc dòng đó vài trăm mili giây sau, trong một trace của riêng nó. Bảng `outbox_events` không mang trace context.
+
+Muốn nối thì phải thêm cột `trace_context` vào `outbox_events`, ghi `traceparent` lúc `OutboxWriter.write(...)`, rồi khôi phục context ở relay trước khi publish. Chưa làm — nhưng ghi ra đây để người đọc biết đó là lựa chọn chứ không phải thiếu sót bị bỏ quên.
+
+**Không có span cho từng truy vấn DB.** Micrometer không tự đo `JdbcTemplate`; muốn có thì phải thêm `datasource-micrometer-spring-boot`. Với dự án này thì `EXPLAIN ANALYZE` và metric HikariCP đã đủ để tìm ra điểm nghẽn, nên chưa thêm.
+
+## Một cái bẫy của build, phát hiện khi làm milestone này
+
+Fat jar của `cinebook-worker` **gói `cinebook-api` lấy từ `~/.m2`**, không phải từ thư mục `target/` vừa build. Quan sát được: sau `mvn -DskipTests package` toàn reactor, jar worker vẫn chứa `cinebook-api-0.1.0-SNAPSHOT.jar` cũ hai ngày (thiếu hẳn `SweepExpiredHoldsUseCase`), và worker chết lúc khởi động với `FileNotFoundException: class path resource [...SweepExpiredHoldsUseCase.class] cannot be opened`.
+
+`mvn clean install` (sau khi **dừng mọi tiến trình đang chạy** — Windows khoá file jar và `clean` sẽ thất bại) cho ra jar đúng.
+
+Đây là loại lỗi nguy hiểm vì im lặng: worker có thể chạy code api cũ mà không báo gì, chỉ lệch hành vi. Lệnh build trước khi chạy worker phải là `clean install`, không phải `package`.

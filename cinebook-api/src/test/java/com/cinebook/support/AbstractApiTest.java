@@ -13,7 +13,12 @@ import org.springframework.web.client.RestClient;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         // Cong quan tri ngau nhien: application.yml ghim 8090, ma test khong duoc gianh cong
         // voi ung dung that dang chay tren may lap trinh vien.
-        properties = "management.server.port=0")
+        properties = {
+                "management.server.port=0",
+                // Test khong co Jaeger: khong tat thi moi lan chay lai co mot chuoi loi
+                // xuat trace that bai, cham va lam nhieu log.
+                "management.tracing.export.enabled=false"
+        })
 public abstract class AbstractApiTest extends AbstractIntegrationTest {
 
     @LocalServerPort

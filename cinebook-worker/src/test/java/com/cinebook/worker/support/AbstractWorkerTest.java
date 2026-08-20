@@ -22,7 +22,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
         "spring.flyway.enabled=true",
         // Cong quan tri ngau nhien: cinebook-worker.yml ghim 8091, ma test khong duoc gianh
         // cong voi worker that dang chay tren may.
-        "management.server.port=0"
+        "management.server.port=0",
+        // Test khong co Jaeger.
+        "management.tracing.export.enabled=false"
 })
 // Profile "test" tat lich chay job — xem SchedulingConfig.
 @ActiveProfiles("test")

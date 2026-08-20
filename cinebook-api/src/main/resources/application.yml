@@ -50,6 +50,24 @@ server:
   port: 8080
 
 management:
+  tracing:
+    sampling:
+      # 1.0 cho demo: moi request deu co trace. Moi truong that phai ha xuong
+      # (0,01-0,1) — luu tram phan tram trace cua mot he thong dong nguoi la tu tao
+      # ra mot bai toan luu tru moi.
+      probability: 1.0
+
+  opentelemetry:
+    resource-attributes:
+      service.name: cinebook-api
+    tracing:
+      export:
+        otlp:
+          # Ten property nay KHAC Boot 3 (management.otlp.tracing.endpoint). Da tra
+          # trong spring-configuration-metadata.json cua
+          # spring-boot-micrometer-tracing-opentelemetry chu khong doan theo tai lieu cu.
+          endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
   server:
     # Cong quan tri tach rieng khoi cong nghiep vu (8080).
     #
