@@ -58,7 +58,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (ket_qua) (rate(cinebook_seat_hold_total[1m]))",
+          "expr": "sum by (ket_qua) (rate(cinebook_seat_hold_seconds_count[1m]))",
           "legendFormat": "{{ket_qua}}",
           "datasource": {
             "type": "prometheus",
@@ -107,7 +107,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(cinebook_seat_hold_total{ket_qua=\"xung_dot\"}[1m])) / clamp_min(sum(rate(cinebook_seat_hold_total[1m])), 0.001)",
+          "expr": "sum(rate(cinebook_seat_hold_seconds_count{ket_qua=\"xung_dot\"}[1m])) / clamp_min(sum(rate(cinebook_seat_hold_seconds_count[1m])), 0.001)",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"

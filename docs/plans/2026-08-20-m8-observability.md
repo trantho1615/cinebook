@@ -228,6 +228,14 @@ Bốn metric đáng xem, và lý do từng cái:
 
 Tạm đảo tên hai nhãn `thanh_cong` và `xung_dot` cho nhau rồi chạy lại test. Cả hai phải đỏ. Nếu không, test đang đo sai thứ.
 
+**Một Timer, không phải Timer + Counter.** `cinebook.seat.hold` cho ra cả `_seconds_count` (số lượt) lẫn `_seconds_bucket` (phân vị), nên không cần Counter riêng — thêm một Counter cùng tên là tạo ra hai nguồn sự thật để lệch nhau.
+
+- [ ] **Step 3b: Suýt tắt `@Transactional` trên đường nóng**
+
+Bản đầu tôi bọc lớp đo thời gian **bên trong** `HoldSeatsUseCase`: `hold()` gọi `giuGhe()` có `@Transactional`. Đó là **self-invocation** — proxy của Spring không chen vào, và transaction biến mất khỏi chính đường nóng của cả dự án. Không test nào trong bộ hiện tại chắc chắn bắt được ngay.
+
+Chỗ đo đúng là **controller**: vừa tránh được bẫy đó, vừa tính cả thời gian commit — đoạn chậm nhất khi nhiều người cùng giành ghế. Đo từ bên trong transaction thì bỏ mất đúng phần đắt nhất.
+
 - [ ] **Step 4: Commit**
 
 ```bash

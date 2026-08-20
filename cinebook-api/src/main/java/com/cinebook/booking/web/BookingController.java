@@ -1,6 +1,8 @@
 package com.cinebook.booking.web;
 
 import com.cinebook.booking.api.BookingView;
+import com.cinebook.booking.domain.SeatsUnavailableException;
+import com.cinebook.shared.metrics.BookingMetrics;
 import com.cinebook.booking.domain.BookingNotFoundException;
 import com.cinebook.booking.infra.BookingQueryJdbc;
 import com.cinebook.booking.infra.CancelBookingUseCase;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +32,7 @@ public class BookingController {
 
     private final HoldSeatsUseCase holdSeats;
     private final IdempotencyService idempotency;
+    private final BookingMetrics metrics;
     private final CancelBookingUseCase cancelBookingUseCase;
     private final BookingQueryJdbc bookingQuery;
     private final AccessControl accessControl;
@@ -37,9 +41,11 @@ public class BookingController {
                              IdempotencyService idempotency,
                              CancelBookingUseCase cancelBookingUseCase,
                              BookingQueryJdbc bookingQuery,
-                             AccessControl accessControl) {
+                             AccessControl accessControl,
+                             BookingMetrics metrics) {
         this.holdSeats = holdSeats;
         this.idempotency = idempotency;
+        this.metrics = metrics;
         this.cancelBookingUseCase = cancelBookingUseCase;
         this.bookingQuery = bookingQuery;
         this.accessControl = accessControl;
@@ -56,10 +62,28 @@ public class BookingController {
                                 @AuthenticationPrincipal UUID userId,
                                 @RequestHeader(value = "Idempotency-Key", required = false)
                                 String idempotencyKey) {
-        return idempotency.execute(
-                idempotencyKey, userId, "POST /showtimes/{id}/holds",
-                () -> BookingResponse.from(holdSeats.hold(userId, showtimeId, request.seatIds())),
-                BookingResponse.class);
+        // Do o day chu khong o trong HoldSeatsUseCase.
+        //
+        // Boc mot lop do thoi gian quanh phuong thuc @Transactional trong CHINH lop do la
+        // self-invocation: proxy cua Spring khong chen vao, va transaction bien mat khoi
+        // duong nong. Do o controller vua tranh duoc bay do, vua tinh ca thoi gian commit —
+        // doan cham nhat khi nhieu nguoi cung gianh ghe.
+        long batDau = System.nanoTime();
+        String ketQua = BookingMetrics.TU_CHOI;
+        try {
+            BookingResponse ketQuaHold = idempotency.execute(
+                    idempotencyKey, userId, "POST /showtimes/{id}/holds",
+                    () -> BookingResponse.from(holdSeats.hold(userId, showtimeId, request.seatIds())),
+                    BookingResponse.class);
+            ketQua = BookingMetrics.THANH_CONG;
+            return ketQuaHold;
+        } catch (SeatsUnavailableException e) {
+            // Xung dot la ket qua nghiep vu, khong phai loi he thong. Dem rieng.
+            ketQua = BookingMetrics.XUNG_DOT;
+            throw e;
+        } finally {
+            metrics.ghiNhanGiuGhe(ketQua, Duration.ofNanos(System.nanoTime() - batDau));
+        }
     }
 
     @GetMapping("/bookings")

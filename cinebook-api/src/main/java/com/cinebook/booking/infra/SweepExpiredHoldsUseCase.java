@@ -1,6 +1,7 @@
 package com.cinebook.booking.infra;
 
 import com.cinebook.shared.audit.AuditLogger;
+import com.cinebook.shared.metrics.BookingMetrics;
 import com.cinebook.shared.outbox.OutboxWriter;
 import com.cinebook.shared.realtime.SeatMapChannel;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -55,13 +56,16 @@ public class SweepExpiredHoldsUseCase {
     private final OutboxWriter outbox;
     private final AuditLogger auditLogger;
     private final SeatMapChannel seatMapChannel;
+    private final BookingMetrics metrics;
 
     public SweepExpiredHoldsUseCase(NamedParameterJdbcTemplate jdbc, OutboxWriter outbox,
-                                    AuditLogger auditLogger, SeatMapChannel seatMapChannel) {
+                                    AuditLogger auditLogger, SeatMapChannel seatMapChannel,
+                                    BookingMetrics metrics) {
         this.jdbc = jdbc;
         this.outbox = outbox;
         this.auditLogger = auditLogger;
         this.seatMapChannel = seatMapChannel;
+        this.metrics = metrics;
     }
 
     @Transactional
@@ -86,6 +90,7 @@ public class SweepExpiredHoldsUseCase {
         }
 
         baoSoDoGheDoi(gheDaNha);
+        metrics.ghiNhanSweeperNha(gheDaNha.size());
 
         return gheDaNha.size();
     }
