@@ -1,0 +1,25 @@
+# Caddy tu xin chung chi Let's Encrypt cho {$DOMAIN} va tu gia han.
+# Khong certbot, khong cron, khong nho ngay het han.
+#
+# Dieu kien de no xin duoc: cong 80 va 443 mo ra Internet, va ban ghi DNS A cua ten mien
+# da tro dung ve dia chi cua may nay.
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# WebSocket di qua ma khong can cau hinh them: Caddy tu nhan header Upgrade va chuyen
+	# tiep. Day la thu de vo nhat khi them reverse proxy vao giua — phai kiem chung bang
+	# cach mo hai cua so va giu ghe.
+	reverse_proxy api:8080
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Ai go dia chi IP thang vao trinh duyet thi khong duoc phuc vu: chung chi chi cap cho ten
+# mien, va tra loi tren IP se lam trinh duyet bao loi chung chi.
+:80 {
+	respond "cinebook: vui long truy cap qua ten mien" 421
+}

@@ -133,5 +133,6 @@ So lieu day du kem dieu kien do: [`docs/ket-qua-do-tai.md`](docs/ket-qua-do-tai.
 - [Thiet ke chi tiet (spec goc)](docs/specs/2026-08-11-cinebook-core-design.md)
 - [Ket qua do tai truoc/sau](docs/ket-qua-do-tai.md)
 - [Kich ban video demo](docs/kich-ban-demo.md)
+- [Huong dan deploy len AWS](docs/huong-dan-deploy.md)
 - [Ke hoach tung milestone](docs/plans/) — chin milestone, moi cai ghi lai ca nhung cho lam
   sai va cach phat hien ra
