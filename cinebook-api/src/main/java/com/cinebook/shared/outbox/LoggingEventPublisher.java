@@ -10,7 +10,8 @@ public class LoggingEventPublisher implements EventPublisher {
     private static final Logger log = LoggerFactory.getLogger(LoggingEventPublisher.class);
 
     @Override
-    public void publish(String eventType, String payloadJson) {
-        log.info("Publish event {} payload={}", eventType, payloadJson);
+    public void publish(OutboxMessage message) {
+        log.info("Publish event {} id={} payload={}",
+                message.eventType(), message.id(), message.payload());
     }
 }

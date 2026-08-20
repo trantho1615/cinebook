@@ -1,23 +1,22 @@
 package com.cinebook.worker;
 
+import com.cinebook.worker.support.AbstractWorkerTest;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-@SpringBootTest
-class WorkerApplicationTest {
+class WorkerApplicationTest extends AbstractWorkerTest {
 
     @Test
     void spring_context_nap_duoc() {
-        // Test pass khi @SpringBootTest nap context thanh cong.
-        // Cac milestone sau se thay bang assertion tren scheduled job cu the.
+        // Test pass khi context nap thanh cong. Tu Milestone 6, context nay gom ca
+        // cac use-case cua cinebook-api ma WorkerBeans kich hoat.
     }
 
     @Test

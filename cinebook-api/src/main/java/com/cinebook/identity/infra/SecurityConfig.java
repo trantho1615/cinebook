@@ -59,6 +59,10 @@ public class SecurityConfig {
                         // duong ghi nam duoi /admin/** va van duoc @PreAuthorize canh.
                         .requestMatchers(HttpMethod.GET,
                                 "/movies/**", "/cinemas/**", "/showtimes/**").permitAll()
+                        // Kenh realtime cua so do ghe. Cong khai vi chinh so do ghe da
+                        // cong khai (GET /showtimes/** o tren) — no chi mang mau ghe, khong
+                        // mang thong tin cua ai ca.
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 // Khong co entry point tuy chinh thi Spring Security mac dinh chuyen huong

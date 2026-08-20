@@ -29,6 +29,7 @@
         <archunit.version>1.5.0</archunit.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <jjwt.version>0.13.0</jjwt.version>
+        <shedlock.version>7.9.0</shedlock.version>
     </properties>
 
     <dependencyManagement>
@@ -52,6 +53,18 @@
                 <artifactId>archunit-junit5</artifactId>
                 <version>${archunit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <!-- ShedLock 7.9.0 build voi Spring 7.0.8 — dung version Spring Framework ma
+                 Boot 4.1.0 mang theo. Da doi chieu maven-metadata.xml va pom cua ca hai. -->
+            <dependency>
+                <groupId>net.javacrumbs.shedlock</groupId>
+                <artifactId>shedlock-spring</artifactId>
+                <version>${shedlock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.javacrumbs.shedlock</groupId>
+                <artifactId>shedlock-provider-jdbc-template</artifactId>
+                <version>${shedlock.version}</version>
             </dependency>
             <!-- Spring Boot khong quan ly jjwt nen phai tu ghim version o day. -->
             <dependency>

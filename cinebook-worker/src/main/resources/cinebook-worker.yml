@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: cinebook-worker
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cinebook
+    username: cinebook
+    password: cinebook
+
+  # cinebook-api so huu schema. Hai deployable cung migrate la cach chac chan co ngay mot
+  # ban deploy nua voi lam hong schema. Test cua worker bat lai qua @SpringBootTest
+  # properties vi container test la DB trang.
+  flyway:
+    enabled: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      properties:
+        # Chan broker ghi trung khi producer retry. KHONG thay the duoc cho viec consumer
+        # idempotent — chi giam so lan phai dung den no.
+        enable.idempotence: true
+    consumer:
+      group-id: cinebook-worker
+      # Consumer moi doc tu dau topic thay vi bo qua nhung gi da co. An toan vi moi
+      # consumer o day deu idempotent.
+      auto-offset-reset: earliest
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# File nay ten cinebook-worker.yml chu khong phai application.yml, va do la co y.
+#
+# cinebook-api nam tren classpath cua worker duoi dang thu vien, va trong jar cua no CO
+# mot application.yml. De hai file cung ten thi file nao thang phu thuoc thu tu classpath
+# — khong co gi bao dam, va da mot lan quan sat thay ket qua khac di giua hai lan chay.
+# Dat spring.config.name=cinebook-worker khien Spring Boot khong con coi application.yml
+# la ung vien nao ca: worker chi doc dung file nay.
+#
+# He qua: moi property ma bean duoc @Import can deu phai khai lai o day. Thieu thi context
+# chet ngay luc khoi dong voi loi placeholder, khong chay sai am tham.
+cinebook:
+  payment:
+    mock-base-url: https://sandbox.example.com
+    reconcile-after: 15m
+  worker:
+    sweep-interval: 30s
+    relay-interval: 1s
+    reconcile-interval: 5m
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
