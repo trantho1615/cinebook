@@ -172,4 +172,21 @@ Fat jar của `cinebook-worker` **gói `cinebook-api` lấy từ `~/.m2`**, khô
 | `histogram_quantile(0.95, ... http_server_requests_seconds_bucket{uri=~".*seats.*"} ...)` | 22,3 ms |
 | `cinebook_sweeper_released_total` | chưa có số trong 5 phút — đúng, vì kịch bản tự huỷ booking chứ không để hold hết hạn |
 
-**Ảnh chụp dashboard: chưa có.** Phiên trình duyệt tự động ở đây không render được vùng panel (dashboard nạp đúng, API trả về đủ 6 panel, truy vấn qua datasource có số liệu — nhưng khung vẽ trống). Nghi do extension Dark Reader can thiệp, giống hiện tượng đã gặp ở Milestone 7. Để đưa biểu đồ vào README thì chụp bằng tay: mở `http://localhost:3000/d/cinebook` trong cửa sổ thường **đã tắt Dark Reader cho localhost**, chạy k6, rồi chụp.
+### Dashboard trong lúc chạy tải
+
+![Dashboard cinebook trong lúc k6 chạy](images/grafana-flash-sale.jpg)
+
+Sáu panel, đọc từ trái sang:
+
+| Panel | Đọc được gì |
+|---|---|
+| Độ trễ HTTP theo endpoint (p95) | Đường `/showtimes/{id}/seats` nằm dưới 50 ms trong suốt đợt tải — sau tối ưu |
+| Lượt giữ ghế theo kết quả | Đỉnh ~9,5 lượt/giây, tách riêng `thanh_cong` và `xung_dot` |
+| Tỉ lệ giữ ghế bị xung đột | Tụt về 0 % khi hết đợt tranh chấp |
+| Event đang chờ trong outbox | Phẳng ở 0 — relay theo kịp, không có event nào đọng |
+| Ghế sweeper đã nhả (cộng dồn) | 6 ghế, đúng bằng dòng log `Sweeper nha 6 ghe het han` của worker |
+| Độ trễ giữ ghế (p95/p99) | 10–40 ms |
+
+**Ảnh này lúc đầu không chụp được**: phiên trình duyệt tự động render ra khung trống dù dashboard nạp đúng và truy vấn có số liệu. Nguyên nhân là extension **Dark Reader** — đúng thứ đã làm sai lệch việc kiểm tra giao diện ở Milestone 7. Tắt nó đi là panel hiện bình thường. Ai chụp lại để đưa vào tài liệu thì nhớ tắt trước.
+
+**Một panel phải sửa vì nó vô dụng trong demo**: "Ghế sweeper nhả" ban đầu dùng `increase(cinebook_sweeper_released_total[5m])`, và counter vừa xuất hiện thì `increase` không vẽ gì — panel nằm `No data` suốt dù worker vừa nhả 6 ghế. Đổi sang `sum(cinebook_sweeper_released_total)` (cộng dồn) thì thấy ngay.

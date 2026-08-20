@@ -48,6 +48,12 @@ khong bao gi. Dung moi tien trinh java dang chay truoc khi `clean` — Windows k
 
 Do tai: xem `load-test/README.md` va so lieu o `docs/ket-qua-do-tai.md`.
 
+Ket qua dang chu y nhat: seat map p95 **1,05 s -> 34 ms** (30 lan) sau khi bo mot vong lap
+doc bang gia 96 lan moi request. Duong giu ghe cung nhanh len 4,6 lan du khong sua dong nao
+cua no — nut that la connection pool dung chung.
+
+![Dashboard trong luc do tai](docs/images/grafana-flash-sale.jpg)
+
 ### Chay voi du lieu mau
 
 ```bash
