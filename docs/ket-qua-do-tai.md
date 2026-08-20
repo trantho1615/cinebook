@@ -158,3 +158,18 @@ Fat jar của `cinebook-worker` **gói `cinebook-api` lấy từ `~/.m2`**, khô
 `mvn clean install` (sau khi **dừng mọi tiến trình đang chạy** — Windows khoá file jar và `clean` sẽ thất bại) cho ra jar đúng.
 
 Đây là loại lỗi nguy hiểm vì im lặng: worker có thể chạy code api cũ mà không báo gì, chỉ lệch hành vi. Lệnh build trước khi chạy worker phải là `clean install`, không phải `package`.
+
+
+## Metric nghiệp vụ trong lúc k6 chạy
+
+Đo qua **chính datasource của Grafana** (không phải hỏi thẳng Prometheus), tức đúng đường mà panel dùng:
+
+| Truy vấn của panel | Giá trị lúc đang chạy tải |
+|---|---|
+| `sum by (ket_qua) (rate(cinebook_seat_hold_seconds_count[1m]))` | ~9,8 lượt/giây, toàn bộ mang nhãn `xung_dot` |
+| `histogram_quantile(0.95, ... cinebook_seat_hold_seconds_bucket ...)` | 17 ms |
+| `cinebook_outbox_pending` | **0** — relay theo kịp, không có event nào đọng |
+| `histogram_quantile(0.95, ... http_server_requests_seconds_bucket{uri=~".*seats.*"} ...)` | 22,3 ms |
+| `cinebook_sweeper_released_total` | chưa có số trong 5 phút — đúng, vì kịch bản tự huỷ booking chứ không để hold hết hạn |
+
+**Ảnh chụp dashboard: chưa có.** Phiên trình duyệt tự động ở đây không render được vùng panel (dashboard nạp đúng, API trả về đủ 6 panel, truy vấn qua datasource có số liệu — nhưng khung vẽ trống). Nghi do extension Dark Reader can thiệp, giống hiện tượng đã gặp ở Milestone 7. Để đưa biểu đồ vào README thì chụp bằng tay: mở `http://localhost:3000/d/cinebook` trong cửa sổ thường **đã tắt Dark Reader cho localhost**, chạy k6, rồi chụp.
