@@ -115,5 +115,11 @@ async function goi(phuongThuc, duongDan, than, choPhepLamMoi = true) {
         });
     }
 
-    return res.status === 204 ? null : res.json();
+    // Doc text roi moi parse, thay vi dua vao ma 204.
+    //
+    // Cong thanh toan gia lap tra 200 voi THAN RONG (ResponseEntity<Void>), va res.json()
+    // tren than rong nem "Unexpected end of JSON input" — mot loi trong nhu loi mang nhung
+    // that ra loi goi da thanh cong. Da gap dung tinh huong do khi bam "Gia lap thanh cong".
+    const noiDung = await res.text();
+    return noiDung ? JSON.parse(noiDung) : null;
 }
