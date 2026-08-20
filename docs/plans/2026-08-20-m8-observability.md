@@ -291,6 +291,16 @@ Không đoán. Ba nguồn dữ liệu, đối chiếu với nhau:
 
 Viết kết luận vào `docs/ket-qua-do-tai.md` **trước khi** sửa bất cứ thứ gì. Nếu số liệu chỉ vào một chỗ khác với dự đoán (cache seat map), thì sửa chỗ số liệu chỉ, không sửa chỗ mình muốn.
 
+**Ba thứ vỡ ra khi chạy thật:**
+
+1. **`responseCallback` trong `options` không có tác dụng.** Lần chạy đầu k6 báo `http_req_failed = 26,97 %` — đúng bằng số lượt 409. Chính cái bẫy plan này cảnh báo, và tôi vẫn dính. Cách đúng: `http.setResponseCallback(...)` ở init context.
+2. **Cấu hình histogram im lặng không có tác dụng** — hai lần. Lần đầu vì phép sửa file trượt mà tôi in `"ok"` không kèm `assert`; lần sau vì khoá map có dấu chấm phải bọc ngoặc vuông (`"[http.server.requests]"`), không thì Spring tách theo dấu chấm thành map lồng nhau.
+3. **Git Bash đổi `/scripts/...` thành đường dẫn Windows** khi mount vào container k6. Thêm `MSYS_NO_PATHCONV=1`.
+
+**Điểm nghẽn không phải chỗ tôi tưởng.** `EXPLAIN (ANALYZE, BUFFERS)` cho thấy hai truy vấn của seat map cộng lại chưa tới **0,4 ms**, trong khi endpoint mất **971 ms** ở p95. CPU chỉ 12 %. Thứ thực sự cạn là **connection pool**: một lượt seat map làm **ba lượt truy vấn tách rời, không nằm trong một transaction**, nên mượn và trả ba connection; với 40 người xem đồng thời thì `active = 10/10` và `pending` có lúc lên 30.
+
+Hai trong ba truy vấn đó lấy dữ liệu **tĩnh**. Đó là chỗ Task 4 phải sửa — trùng giả thuyết của spec, nhưng giờ có bằng chứng chứ không phải phỏng đoán.
+
 - [ ] **Step 4: Commit**
 
 ```bash

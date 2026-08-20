@@ -64,3 +64,16 @@ management:
   endpoint:
     health:
       show-details: always
+
+  metrics:
+    distribution:
+      # Mac dinh Boot chi xuat count/sum/max cho http.server.requests, khong du de tinh
+      # phan vi. Bat histogram de so sanh do tre PHIA SERVER voi do tre k6 do o phia
+      # client — chenh lech giua hai con so la thoi gian xep hang truoc khi vao handler.
+      #
+      # Khoa map co dau cham PHAI boc ngoac vuong. Viet http.server.requests: true thi
+      # Spring tach theo dau cham thanh map long nhau va cau hinh im lang khong co tac
+      # dung nao.
+      percentiles-histogram:
+        "[http.server.requests]": true
+
