@@ -30,7 +30,17 @@ mvn -B -pl cinebook-api    spring-boot:run   # cong 8080
 mvn -B -pl cinebook-worker spring-boot:run   # cong 8081
 ```
 
-Health check: http://localhost:8080/actuator/health va http://localhost:8081/actuator/health
+Health check nam tren CONG QUAN TRI, khong phai cong nghiep vu:
+
+- api: http://localhost:8090/actuator/health
+- worker: http://localhost:8091/actuator/health
+
+Cong 8080/8081 chi phuc vu nghiep vu. Actuator tach sang 8090/8091 vi
+/actuator/prometheus ke ten endpoint, so nguoi dung va nhip giao dich — no thuoc ve mang
+noi bo chu khong phai Internet.
+
+Giam sat: Prometheus http://localhost:9090, Grafana http://localhost:3000 (dashboard
+"cinebook" nap san tu ops/grafana/dashboards).
 
 ### Chay voi du lieu mau
 

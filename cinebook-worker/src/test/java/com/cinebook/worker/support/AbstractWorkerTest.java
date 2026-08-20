@@ -1,6 +1,7 @@
 package com.cinebook.worker.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalManagementPort;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -18,7 +19,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         // Giong main(): worker doc cinebook-worker.yml, khong doc application.yml
         "spring.config.name=cinebook-worker",
-        "spring.flyway.enabled=true"
+        "spring.flyway.enabled=true",
+        // Cong quan tri ngau nhien: cinebook-worker.yml ghim 8091, ma test khong duoc gianh
+        // cong voi worker that dang chay tren may.
+        "management.server.port=0"
 })
 // Profile "test" tat lich chay job — xem SchedulingConfig.
 @ActiveProfiles("test")
@@ -26,6 +30,9 @@ public abstract class AbstractWorkerTest {
 
     @LocalServerPort
     protected int port;
+
+    @LocalManagementPort
+    protected int congQuanTri;
 
 
     static final PostgreSQLContainer POSTGRES =

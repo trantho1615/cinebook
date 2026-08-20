@@ -153,7 +153,15 @@ curl -s localhost:8090/actuator/prometheus | head
 
 Mở `http://localhost:9090/targets` — cả hai đích phải **UP**. Đây là bước không được bỏ: pom khai đúng mà endpoint không bật là chuyện đã xảy ra ở Milestone 1 với Flyway.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Ba thứ vỡ ra khi chạy thật, không cái nào test bắt trước được**
+
+1. **`SecurityConfig` chặn luôn `/actuator/prometheus`.** Chuỗi chính đang `anyRequest().authenticated()`. Cách sửa: một `SecurityFilterChain` riêng `@Order(0)` khớp `EndpointRequest.toAnyEndpoint()` — với `management.server.port` tách riêng thì các endpoint đó chỉ tồn tại trên cổng quản trị, nên mở chúng không lộ gì trên 8080. Lớp `EndpointRequest` ở Boot 4 nằm tại `org.springframework.boot.security.autoconfigure.actuate.web.servlet` (đã tra trong jar, không đoán).
+2. **Worker trả 403** cho `/actuator/prometheus` vì `WorkerSecurityConfig` đang `denyAll`. Prometheus không scrape được worker. Cùng cách sửa.
+3. **Actuator biến mất khỏi cổng nghiệp vụ** — đúng thiết kế, nhưng đổi hợp đồng vận hành. `ApiApplicationTest` đỏ vì gọi health trên 8080; `README.md` cũng đang chỉ sai. Và `application.yml` ghim 8090 nghĩa là **mọi test đều giành một cổng cố định**, nên `AbstractApiTest`/`AbstractWorkerTest` phải đặt `management.server.port=0`.
+
+**Grafana chết khi khởi động** với `Datasource provisioning error: data source not found`: thêm `uid` cố định vào một datasource đã tồn tại trong volume cũ. Đây không phải chuyện riêng của máy tôi — bất kỳ ai đã chạy bản trước rồi pull bản này về đều dính. Sửa bằng `deleteDatasources` trong file provisioning.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git commit -m "feat: xuat metric qua cong quan tri rieng"

@@ -4,6 +4,8 @@ import com.cinebook.shared.web.ApiError;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,6 +37,24 @@ public class SecurityConfig {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Chuoi rieng cho actuator, dat truoc chuoi chinh.
+     *
+     * Voi management.server.port = 8090, cac endpoint nay CHI ton tai tren cong quan tri —
+     * chuoi nay khong mo them gi tren cong 8080. Thu bao ve chung la mang: cong quan tri
+     * khong duoc public ra ngoai. MetricsExposureTest.cong_nghiep_vu_khong_lo_metric canh
+     * dieu do, nen neu mot ngay nao do ai go management.server.port di, test se do.
+     */
+    @Bean
+    @Order(0)
+    SecurityFilterChain actuatorFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .build();
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -50,7 +70,6 @@ public class SecurityConfig {
                         // loi goi nay.
                         .requestMatchers("/auth/register", "/auth/login",
                                 "/auth/refresh", "/auth/logout").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Webhook den tu cong thanh toan, khong co token cua nguoi dung.
                         // Chu ky HMAC la thu xac thuc cho endpoint nay.
                         .requestMatchers(HttpMethod.POST, "/webhooks/**").permitAll()

@@ -54,6 +54,39 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
+  prometheus:
+    image: prom/prometheus:v3.8.0
+    container_name: cinebook-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    extra_hosts:
+      # Ung dung chay tren may that chu khong trong compose, nen Prometheus phai goi nguoc
+      # ra host. Tren Docker Desktop ten nay co san, tren Linux thi phai khai nhu day.
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:12.3.1
+    container_name: cinebook-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # Demo tren may ca nhan: bo dang nhap de mo la thay dashboard ngay. Khong bao gio
+      # dat nhu vay o moi truong that.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   pgdata:
   redisdata:
+  promdata:
+  grafanadata:

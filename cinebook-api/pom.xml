@@ -46,6 +46,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- Autoconfiguration cua Prometheus nam trong spring-boot-micrometer-metrics (di kem
+             spring-boot-starter-actuator), con registry thi phai tu khai. Da doi chieu:
+             spring-boot-actuator-autoconfigure 4.1.0 KHONG con lop prometheus nao — Boot 4
+             tach autoconfiguration thanh module rieng, dung mau da can o Milestone 1 voi
+             flyway-core. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <!-- jjwt tach lam ba artifact co chu y: code chi compile voi jjwt-api,
              hai cai con lai la runtime nen khong lo tay goi vao lop noi bo cua thu vien. -->

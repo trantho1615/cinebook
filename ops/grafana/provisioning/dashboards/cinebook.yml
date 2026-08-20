@@ -1,0 +1,10 @@
+# Nap dashboard tu file trong repo thay vi dung bang tay tren giao dien: mot dashboard chi
+# ton tai trong volume cua nguoi tao ra no thi nguoi khac clone repo ve se khong thay gi.
+apiVersion: 1
+
+providers:
+  - name: cinebook
+    type: file
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards

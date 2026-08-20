@@ -1,7 +1,9 @@
 package com.cinebook.worker.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,6 +25,23 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WorkerSecurityConfig {
 
+    /**
+     * Chuoi rieng cho actuator. Voi management.server.port = 8091, cac endpoint nay chi ton
+     * tai tren cong quan tri, nen mo chung o day khong lam lo gi tren cong 8081.
+     *
+     * Da gap khi chay that: khong co chuoi nay thi denyAll ben duoi chan luon
+     * /actuator/prometheus va Prometheus khong scrape duoc worker (403).
+     */
+    @Bean
+    @Order(0)
+    SecurityFilterChain actuatorFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .build();
+    }
+
     @Bean
     SecurityFilterChain workerFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -30,7 +49,6 @@ public class WorkerSecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // denyAll chu khong phai authenticated(): worker khong co nguoi dung
                         // nao de xac thuc ca. Bat cu duong nao khac deu la mot sai lam.
                         .anyRequest().denyAll())

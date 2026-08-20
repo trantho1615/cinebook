@@ -50,10 +50,17 @@ server:
   port: 8080
 
 management:
+  server:
+    # Cong quan tri tach rieng khoi cong nghiep vu (8080).
+    #
+    # /actuator/prometheus ke ten tung endpoint, so nguoi dung dang hoat dong va nhip giao
+    # dich — du de bat ky ai dung lai buc tranh kinh doanh. No thuoc ve mang noi bo. Prometheus
+    # scrape cong nay; ngoai Internet chi thay 8080.
+    port: 8090
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: always
