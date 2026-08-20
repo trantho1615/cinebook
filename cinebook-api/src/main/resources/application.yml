@@ -50,10 +50,48 @@ server:
   port: 8080
 
 management:
+  tracing:
+    sampling:
+      # 1.0 cho demo: moi request deu co trace. Moi truong that phai ha xuong
+      # (0,01-0,1) — luu tram phan tram trace cua mot he thong dong nguoi la tu tao
+      # ra mot bai toan luu tru moi.
+      probability: 1.0
+
+  opentelemetry:
+    resource-attributes:
+      service.name: cinebook-api
+    tracing:
+      export:
+        otlp:
+          # Ten property nay KHAC Boot 3 (management.otlp.tracing.endpoint). Da tra
+          # trong spring-configuration-metadata.json cua
+          # spring-boot-micrometer-tracing-opentelemetry chu khong doan theo tai lieu cu.
+          endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+  server:
+    # Cong quan tri tach rieng khoi cong nghiep vu (8080).
+    #
+    # /actuator/prometheus ke ten tung endpoint, so nguoi dung dang hoat dong va nhip giao
+    # dich — du de bat ky ai dung lai buc tranh kinh doanh. No thuoc ve mang noi bo. Prometheus
+    # scrape cong nay; ngoai Internet chi thay 8080.
+    port: 8090
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: always
+
+  metrics:
+    distribution:
+      # Mac dinh Boot chi xuat count/sum/max cho http.server.requests, khong du de tinh
+      # phan vi. Bat histogram de so sanh do tre PHIA SERVER voi do tre k6 do o phia
+      # client — chenh lech giua hai con so la thoi gian xep hang truoc khi vao handler.
+      #
+      # Khoa map co dau cham PHAI boc ngoac vuong. Viet http.server.requests: true thi
+      # Spring tach theo dau cham thanh map long nhau va cau hinh im lang khong co tac
+      # dung nao.
+      percentiles-histogram:
+        "[http.server.requests]": true
+

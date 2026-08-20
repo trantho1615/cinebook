@@ -1,0 +1,23 @@
+# Scrape hai deployable qua CONG QUAN TRI (8090/8091), khong phai cong nghiep vu.
+#
+# host.docker.internal: Prometheus chay trong container con ung dung chay tren may that
+# (mvn spring-boot:run hoac java -jar). Khi nao dong goi ung dung vao compose thi doi
+# thanh ten service.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: cinebook-api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8090']
+        labels:
+          deployable: api
+
+  - job_name: cinebook-worker
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8091']
+        labels:
+          deployable: worker

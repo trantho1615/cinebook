@@ -18,13 +18,21 @@ public class PriceQueryJpa implements PriceQuery {
 
     @Override
     public long priceFor(long basePrice, String seatType) {
-        return basePrice + surcharges().getOrDefault(seatType, 0L);
+        return bangGia().priceFor(basePrice, seatType);
+    }
+
+    @Override
+    public BangGia bangGia() {
+        return new BangGia(surcharges());
     }
 
     /**
-     * Bang gia chi co ba dong va gan nhu khong bao gio doi, nhung van doc tu database
-     * moi lan goi thay vi cache: o milestone nay chua co so lieu nao cho thay day la
-     * diem nghen. Toi uu khi da do, khong toi uu vi linh cam.
+     * Van doc tu database moi lan goi, KHONG cache.
+     *
+     * Ghi chu cu o day noi "toi uu khi da do, khong toi uu vi linh cam". Da do o Milestone 8:
+     * van de khong phai la doc bang nay ton kem, ma la ShowtimeQueryJdbc goi no 96 lan cho
+     * mot so do ghe. Cach sua dung la doc mot lan roi dung lai (xem PriceQuery.bangGia),
+     * chu khong phai them mot lop cache co the tra gia cu.
      */
     private Map<String, Long> surcharges() {
         return priceRules.findAll().stream()

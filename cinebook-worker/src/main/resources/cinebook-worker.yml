@@ -15,6 +15,12 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    # Bat observation de span cua producer va consumer nam trong CUNG mot trace.
+    # Khong bat thi hai ben la hai trace roi rac, va viec dieu tra lai la ghep bang mat.
+    template:
+      observation-enabled: true
+    listener:
+      observation-enabled: true
     producer:
       acks: all
       properties:
@@ -55,6 +61,29 @@ server:
   port: 8081
 
 management:
+  tracing:
+    sampling:
+      # 1.0 cho demo: moi request deu co trace. Moi truong that phai ha xuong
+      # (0,01-0,1) — luu tram phan tram trace cua mot he thong dong nguoi la tu tao
+      # ra mot bai toan luu tru moi.
+      probability: 1.0
+
+  opentelemetry:
+    resource-attributes:
+      service.name: cinebook-worker
+    tracing:
+      export:
+        otlp:
+          # Ten property nay KHAC Boot 3 (management.otlp.tracing.endpoint). Da tra
+          # trong spring-configuration-metadata.json cua
+          # spring-boot-micrometer-tracing-opentelemetry chu khong doan theo tai lieu cu.
+          endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+  server:
+    # 8081 da la cong nghiep vu cua worker, nen cong quan tri la 8091. Cung ly do voi api:
+    # metric khong duoc nam cung cho voi cong ma ben ngoai cham toi.
+    port: 8091
+
   health:
     # Worker cham toi Redis DUY NHAT qua SeatMapChannel, va cho do da nuot loi: mat Redis
     # thi chi mat realtime, sweeper va relay van chay. De health indicator mac dinh bat
@@ -70,7 +99,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       show-details: always

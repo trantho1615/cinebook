@@ -11,6 +11,8 @@ import com.cinebook.payment.infra.ProcessPaymentUseCase;
 import com.cinebook.payment.infra.ReconcilePaymentsUseCase;
 import com.cinebook.payment.infra.RefundUseCase;
 import com.cinebook.shared.audit.AuditLogger;
+import com.cinebook.shared.metrics.BookingMetrics;
+import com.cinebook.shared.metrics.OutboxMetrics;
 import com.cinebook.shared.outbox.OutboxRelay;
 import com.cinebook.shared.outbox.OutboxWriter;
 import com.cinebook.shared.realtime.SeatMapChannel;
@@ -42,6 +44,10 @@ import org.springframework.context.annotation.Import;
         OutboxRelay.class,
         ConfirmBookingUseCase.class,
         SweepExpiredHoldsUseCase.class,
+        BookingMetrics.class,
+        // Chi worker bao so nay: de ca api cung bao thi hai deployable ghi cung mot con so
+        // tu cung mot bang, va Prometheus co hai chuoi trung noi dung.
+        OutboxMetrics.class,
         // Sweeper bao so do ghe doi qua Redis pub/sub; cinebook-api dang giu WebSocket
         // se day xuong client. Worker KHONG @Import RedisSeatMapSubscriber: no khong
         // phuc vu WebSocket cho ai ca.

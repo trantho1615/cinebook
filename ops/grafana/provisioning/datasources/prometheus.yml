@@ -1,0 +1,20 @@
+apiVersion: 1
+
+# Xoa ban cu truoc khi tao lai.
+#
+# Grafana luu datasource trong volume cua no. Neu ai do da chay ban truoc (khi datasource
+# chua co uid co dinh) roi pull ban nay ve, Grafana se CHET luc khoi dong voi
+# "Datasource provisioning error: data source not found" — da gap dung tinh huong do.
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    # uid co dinh de dashboard trong repo tham chieu duoc; de Grafana tu sinh thi
+    # moi lan dung lai la mot uid khac va panel mat datasource.
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
