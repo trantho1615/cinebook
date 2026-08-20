@@ -24,6 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Nap du lieu mau de chay thu bang tay va de quay video demo.
@@ -60,17 +61,33 @@ public class DemoDataSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (movies.count() > 0) {
-            log.info("Da co du lieu, bo qua buoc nap du lieu mau");
+        // Danh muc nap mot lan: phim va rap khong tu het han.
+        List<Movie> danhSachPhim = movies.count() > 0 ? movies.findAll() : napPhim();
+        List<Room> danhSachPhong = rooms.count() > 0 ? rooms.findAll() : napRapVaPhong();
+
+        // Lich chieu thi KHAC han: chung tu het han. Ban dau lop nay chan bang
+        // "if (movies.count() > 0) return", nen lich chieu chi duoc nap dung mot lan — bay
+        // ngay sau la moi suat deu thuoc ve qua khu va ban demo mo len khong co gi de dat.
+        // Da quan sat dung tinh huong do tren DB that: 252 suat chieu, 0 suat trong tuong lai.
+        // Hoi "lich con phu toi bao xa", khong phai "co con suat nao khong". Dieu kien
+        // "> 0 suat trong tuong lai" qua long: mot suat le loi cung du chan viec nap lai.
+        // Da gap dung tinh huong do khi chay that — DB con dung MOT suat tren tong 253 ma
+        // seeder van bao "van con suat chieu dat duoc" roi bo qua.
+        //
+        // Le SO_NGAY - 2 la bien an toan: sau mot lan nap day, suat xa nhat nam o khoang
+        // SO_NGAY - 1 ngay nen dieu kien nay khong dung ngay o lan khoi dong ke tiep.
+        Instant nguong = Instant.now().plus(SO_NGAY - 2, ChronoUnit.DAYS);
+        if (showtimes.countByStartAtAfter(nguong) > 0) {
+            log.info("Lich chieu con phu qua {} ngay toi, bo qua buoc nap", SO_NGAY - 2);
             return;
         }
 
-        List<Movie> danhSachPhim = napPhim();
-        List<Room> danhSachPhong = napRapVaPhong();
+        // KHONG xoa lich cu: bookings va seat_hold co the dang tham chieu toi chung, va mot
+        // rap co lich chieu qua khu la chuyen binh thuong. Chi them lich cho nhung ngay toi.
         int soSuat = napSuatChieu(danhSachPhim, danhSachPhong);
 
-        log.info("Da nap du lieu mau: {} phim, {} phong, {} suat chieu",
-                danhSachPhim.size(), danhSachPhong.size(), soSuat);
+        log.info("Da nap {} suat chieu cho {} ngay toi ({} phim, {} phong)",
+                soSuat, SO_NGAY, danhSachPhim.size(), danhSachPhong.size());
     }
 
     private List<Movie> napPhim() {
@@ -132,7 +149,18 @@ public class DemoDataSeeder implements ApplicationRunner {
         int soSuat = 0;
         int chiSoPhim = 0;
 
+        // Bo qua phong da co lich trong tuong lai. Chen de len se cham rang buoc no_overlap
+        // cua Milestone 3, va vi lop nay chay luc khoi dong nen exception do khong chi lam
+        // hong du lieu mau — no lam CA UNG DUNG khong len duoc. Da gap dung tinh huong do
+        // voi mot suat le loi con sot lai trong DB demo.
+        Set<UUID> phongDaCoLich =
+                Set.copyOf(showtimes.findRoomIdsWithShowtimeAfter(Instant.now()));
+
         for (Room room : danhSachPhong) {
+            if (phongDaCoLich.contains(room.getId())) {
+                log.info("Phong {} da co lich chieu, bo qua", room.getId());
+                continue;
+            }
             for (int ngay = 0; ngay < SO_NGAY; ngay++) {
                 Instant gioTrongNgay = batDauNgayDau.plus(ngay, ChronoUnit.DAYS);
 
