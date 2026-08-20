@@ -163,3 +163,69 @@ button:disabled {
         outline: 2px solid transparent;
     }
 }
+
+/* --- Man hinh, chu thich va thanh hanh dong --- */
+
+.man-hinh {
+    max-width: 22rem;
+    margin: 0 auto 1.5rem;
+    padding: 0.35rem;
+    background: var(--vien);
+    border-radius: 0 0 40% 40%;
+    color: var(--chu-mo);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.chu-thich {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    color: var(--chu-mo);
+    font-size: 0.8rem;
+}
+
+.chu-thich span::before {
+    content: '';
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    margin-right: 0.35rem;
+    border-radius: 3px;
+    vertical-align: -1px;
+}
+
+.chu-thich .k-trong::before { background: var(--ghe-trong); }
+.chu-thich .k-nguoi-khac::before { background: var(--ghe-nguoi-khac); }
+.chu-thich .k-da-ban::before { background: var(--ghe-da-ban); }
+.chu-thich .k-cua-toi::before { background: var(--ghe-cua-toi); }
+
+.thanh-hanh-dong {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    background: var(--the);
+    border: 1px solid var(--vien);
+    border-radius: 8px;
+}
+
+.dem-nguoc {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.1rem;
+}
+
+.dem-nguoc.gap {
+    color: #ff8f6b;
+}
+
+a {
+    color: var(--nhan);
+}
+
+header h1 a {
+    color: inherit;
+    text-decoration: none;
+}

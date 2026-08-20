@@ -11,10 +11,13 @@ if (token()) {
 
 function hienFormDangNhap() {
     oNguoiDung.textContent = '';
+    // api.js dua ve day kem ?phien=het-han khi khong lam moi duoc phien nua.
+    const hetHan = new URLSearchParams(location.search).get('phien') === 'het-han';
+
     app.innerHTML = `
         <form class="the" id="form-dang-nhap">
             <h2>Dang nhap</h2>
-            <div id="loi"></div>
+            <div id="loi">${hetHan ? '<p class="loi">Phien dang nhap da het han, moi dang nhap lai.</p>' : ''}</div>
             <label for="email">Email</label>
             <input id="email" type="email" autocomplete="username" required>
             <label for="mat-khau">Mat khau</label>
