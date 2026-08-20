@@ -73,6 +73,11 @@ public class ShowtimeQueryJdbc implements ShowtimeQuery {
 
         // Hai cau SQL chu khong phai mot: gop so do ghe vao cung cau voi phan dau se
         // nhan ban toan bo thong tin phim va rap len 50-200 dong.
+        // Doc bang gia MOT lan cho ca phong. Truoc day vong lap goi priceQuery.priceFor cho
+        // tung ghe, va moi lan goi lai doc lai bang price_rules: mot so do ghe 96 cho tro
+        // thanh 96 luot truy van, moi luot muon mot connection.
+        PriceQuery.BangGia bangGia = priceQuery.bangGia();
+
         List<SeatView> seats = new ArrayList<>();
         for (Map<String, Object> row : jdbc.queryForList(SQL_SEATS, Map.of("roomId", roomId))) {
             String rowLabel = (String) row.get("row_label");
@@ -84,7 +89,7 @@ public class ShowtimeQueryJdbc implements ShowtimeQuery {
                     seatNumber,
                     rowLabel + seatNumber,
                     seatType,
-                    priceQuery.priceFor(basePrice, seatType)));
+                    bangGia.priceFor(basePrice, seatType)));
         }
 
         return Optional.of(new ShowtimeDetail(

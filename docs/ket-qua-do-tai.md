@@ -65,21 +65,64 @@ Sort + Bitmap Heap Scan on seats (96 dòng)             Execution Time: 0.33 ms
 
 Hai truy vấn cộng lại chưa tới **0,4 ms**, trong khi endpoint mất **971 ms** ở p95. Vậy thời gian không nằm ở database.
 
-Đọc `SeatMapQueryJdbc` cùng `ShowtimeQueryJdbc.findDetail`, một lượt gọi seat map thực hiện **ba lượt truy vấn tách rời**:
+Đọc `SeatMapQueryJdbc` cùng `ShowtimeQueryJdbc.findDetail`, thoạt nhìn một lượt gọi seat map thực hiện **ba lượt truy vấn tách rời**: header của suất chiếu, 96 ghế của phòng, và các hold đang hiệu lực. Ba lượt đó **không nằm trong một transaction**, nên mỗi lượt mượn và trả một connection riêng.
 
-1. header của suất chiếu (join phim, phòng, rạp),
-2. 96 ghế của phòng,
-3. các hold đang hiệu lực.
-
-Ba lượt đó **không nằm trong một transaction**, nên mỗi lượt mượn và trả một connection riêng. Với 40 người xem đồng thời, pool 10 connection trở thành hàng đợi: `active = 10/10` và `pending` có lúc lên 30, trong khi CPU chỉ 12 %.
+Nhưng đọc kỹ hơn thì con số không phải ba (xem phần tiếp theo). Điều chắc chắn ngay ở bước này: với 40 người xem đồng thời, pool 10 connection trở thành hàng đợi — `active = 10/10`, `pending` có lúc lên 30 — trong khi CPU chỉ 12 %.
 
 **Kết luận: hệ thống không thiếu CPU và không chậm ở SQL. Nó xếp hàng chờ kết nối.**
 
-Hai trong ba truy vấn đó lấy dữ liệu **tĩnh**: sơ đồ ghế của một phòng và thông tin phim/rạp không đổi giữa các lần gọi. Chỉ truy vấn thứ ba là động. Đây là chỗ tối ưu mà số liệu chỉ tới — trùng với giả thuyết ở mục 2.3 của spec, nhưng bây giờ có bằng chứng chứ không phải phỏng đoán.
+## Tối ưu: đọc bảng giá một lần thay vì 96 lần
+
+Đọc kỹ `ShowtimeQueryJdbc.findDetail` cùng `PriceQueryJpa.priceFor` cho thấy con số thật:
+
+```java
+for (Map<String, Object> row : jdbc.queryForList(SQL_SEATS, ...)) {   // 96 ghế
+    seats.add(new SeatView(..., priceQuery.priceFor(basePrice, seatType)));
+}                                    // ↑ mỗi lần gọi lại findAll() bảng price_rules
+```
+
+Một lượt xem sơ đồ ghế không phải 3 lượt truy vấn mà là **99**: 1 header + 1 seats + **96 lượt đọc bảng giá** + 1 lượt đọc hold. Mỗi lượt mượn và trả một connection từ pool 10.
+
+Điều đáng nói: chính lớp `PriceQueryJpa` đã ghi chú từ Milestone 3 rằng nó cố ý đọc lại mỗi lần, kèm câu *"tối ưu khi đã đo, không tối ưu vì linh cảm"*. Đây là lúc đã đo.
+
+**Cách sửa: `PriceQuery.bangGia()` trả một bản chụp, đọc một lần rồi dùng cho cả 96 ghế.** Bản chụp chỉ sống trong phạm vi một lần gọi — **không phải cache**, nên không có chuyện trả giá cũ. Không thêm Redis, không thêm TTL, không thêm gì phải vô hiệu hoá.
+
+Một thay đổi duy nhất, rồi đo lại.
 
 ## Sau khi tối ưu
 
-*(Điền ở Task 4, đo lại đúng kịch bản này: cùng máy, cùng 50 VU, cùng 60 giây, cùng dữ liệu.)*
+Cùng máy, cùng 50 VU, cùng 60 giây, cùng dữ liệu, cùng kịch bản.
+
+| Đường | | Trước | Sau | Nhanh hơn |
+|---|---|---|---|---|
+| seat map | avg | 250 ms | **12,5 ms** | 20× |
+| seat map | p90 | 494 ms | 22,2 ms | 22× |
+| seat map | **p95** | **1,05 s** ✗ | **34,4 ms** ✓ | **30×** |
+| seat map | max | 1,17 s | 72,2 ms | 16× |
+| giữ ghế | avg | 74 ms | **16,6 ms** | 4,5× |
+| giữ ghế | p95 | 111 ms | **24,3 ms** | 4,6× |
+| toàn hệ | throughput | 26,3 req/s | **29,0 req/s** | +10 % |
+| toàn hệ | tỉ lệ lỗi | 0,00 % | 0,00 % | — |
+
+Cả hai ngưỡng đều đạt. Phía server (Micrometer đo): seat map p95 **971 ms → 17,6 ms**.
+
+### Vì sao nhanh hơn — cơ chế, không phải phép màu
+
+| Chỉ số | Trước | Sau |
+|---|---|---|
+| `hikaricp_connections_active` (đỉnh) | **10 / 10** (cạn) | **0** |
+| `hikaricp_connections_pending` (đỉnh) | 3, có lần 30 | **0** |
+| CPU tiến trình api | 12 % | 3,5 % |
+
+Bỏ 96 lượt truy vấn mỗi request khiến connection không còn là hàng đợi. Pool 10 vốn không thiếu — nó bị **một vòng lặp** làm cạn.
+
+**Đường giữ ghế cũng nhanh lên 4,6 lần dù không sửa một dòng nào của nó.** Đó là bằng chứng rõ nhất rằng nút thắt là tài nguyên dùng chung: khi seat map thôi giữ hết connection, mọi đường khác thở được.
+
+### Những gì KHÔNG cải thiện
+
+- **Tỉ lệ xung đột vẫn ~96 %** (560 xung đột / 20 thành công). Đúng như mong đợi: đó là do kịch bản dựng 10 VU giành 24 ghế, không liên quan gì tới tốc độ.
+- **Throughput chỉ tăng 10 %** dù độ trễ giảm 30 lần. Cũng đúng: k6 chạy `constant-vus` với `sleep` cố định giữa các vòng, nên số request bị nhịp ngủ khống chế chứ không bị độ trễ khống chế. Muốn đo throughput tối đa thì phải đổi sang executor `constant-arrival-rate` — một bài đo khác.
+- **Cache Redis cho seat map: không làm.** Giả thuyết đứng đầu ở mục 2.3 của spec hoá ra không cần thiết: sau khi bỏ vòng lặp 96 lượt, p95 còn 34 ms, cách ngưỡng 300 ms rất xa. Thêm một lớp cache lúc này là thêm một thứ có thể trả dữ liệu cũ để đổi lấy một khoản lợi mà số liệu không đòi.
 
 ## Những gì cần nhớ khi đọc lại
 

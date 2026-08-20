@@ -313,9 +313,15 @@ git commit -m "test: kich ban k6 flash sale va so lieu baseline"
 
 **Files:** phụ thuộc kết quả Task 3.
 
-**Giả thuyết đứng đầu** (spec mục 2.3): `GET /showtimes/{id}/seats` là điểm nghẽn, vì nó là endpoint bị gọi nhiều nhất và mỗi lần đều `JOIN` bốn bảng. Cách sửa dự kiến: cache trong Redis, **vô hiệu hoá bằng chính event đã có** — `SeatMapChannel` đang bắn mỗi khi ghế đổi trạng thái, nên chỗ đó cũng là chỗ xoá cache. Không cần TTL đoán mò.
+**Giả thuyết đứng đầu** (spec mục 2.3): cache seat map trong Redis, vô hiệu hoá bằng chính event `SeatMapChannel` đã có.
 
-Nhưng chỉ làm nếu Task 3 chỉ vào đó.
+**Số liệu chỉ vào chỗ khác, và giả thuyết đó hoá ra không cần.** `ShowtimeQueryJdbc.findDetail` gọi `priceQuery.priceFor(...)` **trong vòng lặp qua 96 ghế**, mà mỗi lần gọi lại `findAll()` bảng `price_rules`. Một lượt xem sơ đồ ghế không phải 3 truy vấn mà là **99**, mỗi truy vấn mượn một connection từ pool 10.
+
+Cách sửa là đọc bảng giá **một lần** rồi dùng cho cả phòng (`PriceQuery.bangGia()` trả một bản chụp sống trong phạm vi một lần gọi — không phải cache, nên không có dữ liệu cũ). Kết quả: seat map p95 **1,05 s → 34 ms** (30×), và đường giữ ghế cũng nhanh lên 4,6× **dù không sửa một dòng nào của nó** — bằng chứng rằng nút thắt là tài nguyên dùng chung.
+
+Không thêm Redis cache: sau khi sửa, p95 cách ngưỡng 300 ms rất xa. Thêm một lớp có thể trả dữ liệu cũ để đổi lấy khoản lợi mà số liệu không đòi là đi ngược đúng nguyên tắc của milestone này.
+
+Đáng ghi: chính `PriceQueryJpa` đã mang ghi chú từ Milestone 3 — *"tối ưu khi đã đo, không tối ưu vì linh cảm"*. Milestone này là lúc đã đo.
 
 - [ ] **Step 1: Sửa một thứ duy nhất**
 
