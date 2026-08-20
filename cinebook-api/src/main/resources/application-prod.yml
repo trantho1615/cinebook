@@ -1,0 +1,30 @@
+# Cau hinh cho moi truong that.
+#
+# Nguyen tac cua file nay: KHONG co gia tri mac dinh cho bat cu thu gi nhay cam. Thieu bien
+# moi truong thi ung dung phai chet ngay luc khoi dong voi mot loi ro rang, chu khong duoc
+# lang le chay bang mot gia tri ai cung doc duoc trong repo.
+#
+# ProdConfigTest canh dieu nay.
+
+cinebook:
+  jwt:
+    secret: ${CINEBOOK_JWT_SECRET}
+  payment:
+    webhook-secret: ${CINEBOOK_WEBHOOK_SECRET}
+
+spring:
+  # Schema do api so huu; van chay Flyway o day. Worker khong migrate.
+  flyway:
+    enabled: true
+
+management:
+  tracing:
+    sampling:
+      # 1.0 la cho demo tren may. Luu tram phan tram trace cua mot he thong dong nguoi la tu
+      # tao ra mot bai toan luu tru moi.
+      probability: 0.1
+
+logging:
+  level:
+    # Bot on ao cua Kafka client luc khoi dong nguoi (chuoi NOT_COORDINATOR khoang mot giay).
+    org.apache.kafka.clients.consumer.internals: WARN
