@@ -59,6 +59,12 @@ public class SecurityConfig {
                         // duong ghi nam duoi /admin/** va van duoc @PreAuthorize canh.
                         .requestMatchers(HttpMethod.GET,
                                 "/movies/**", "/cinemas/**", "/showtimes/**").permitAll()
+                        // UI demo la file tinh. Liet ke dung nhung duong dan cua no chu
+                        // khong dung mot dau sao chung chung: "/**" se nuot ca nhung endpoint
+                        // chua duoc liet ke o tren.
+                        .requestMatchers(HttpMethod.GET,
+                                "/", "/index.html", "/seats.html", "/checkout.html",
+                                "/css/**", "/js/**", "/favicon.ico").permitAll()
                         // Kenh realtime cua so do ghe. Cong khai vi chinh so do ghe da
                         // cong khai (GET /showtimes/** o tren) — no chi mang mau ghe, khong
                         // mang thong tin cua ai ca.

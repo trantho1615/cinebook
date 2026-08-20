@@ -60,17 +60,25 @@ public class DemoDataSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (movies.count() > 0) {
-            log.info("Da co du lieu, bo qua buoc nap du lieu mau");
+        // Danh muc nap mot lan: phim va rap khong tu het han.
+        List<Movie> danhSachPhim = movies.count() > 0 ? movies.findAll() : napPhim();
+        List<Room> danhSachPhong = rooms.count() > 0 ? rooms.findAll() : napRapVaPhong();
+
+        // Lich chieu thi KHAC han: chung tu het han. Ban dau lop nay chan bang
+        // "if (movies.count() > 0) return", nen lich chieu chi duoc nap dung mot lan — bay
+        // ngay sau la moi suat deu thuoc ve qua khu va ban demo mo len khong co gi de dat.
+        // Da quan sat dung tinh huong do tren DB that: 252 suat chieu, 0 suat trong tuong lai.
+        if (showtimes.countByStartAtAfter(Instant.now()) > 0) {
+            log.info("Van con suat chieu dat duoc, bo qua buoc nap lich chieu");
             return;
         }
 
-        List<Movie> danhSachPhim = napPhim();
-        List<Room> danhSachPhong = napRapVaPhong();
+        // KHONG xoa lich cu: bookings va seat_hold co the dang tham chieu toi chung, va mot
+        // rap co lich chieu qua khu la chuyen binh thuong. Chi them lich cho nhung ngay toi.
         int soSuat = napSuatChieu(danhSachPhim, danhSachPhong);
 
-        log.info("Da nap du lieu mau: {} phim, {} phong, {} suat chieu",
-                danhSachPhim.size(), danhSachPhong.size(), soSuat);
+        log.info("Da nap {} suat chieu cho {} ngay toi ({} phim, {} phong)",
+                soSuat, SO_NGAY, danhSachPhim.size(), danhSachPhong.size());
     }
 
     private List<Movie> napPhim() {
