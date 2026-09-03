@@ -2,6 +2,15 @@
 
 ![CI](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml/badge.svg)
 
+### ▶ Ban chay that: **https://cinebookapp.duckdns.org**
+
+Bam **"Dung tai khoan demo"** la dat duoc ve ngay, khong can dang ky. Muon thay phan hay
+nhat: mo **hai cua so** cung mot suat chieu, giu ghe o cua so nay va nhin cua so kia doi mau.
+
+Cong thanh toan la ban gia lap — khong co tien that o day.
+
+---
+
 He thong dat ve xem phim, Java 25 + Spring Boot 4. Du an tap trung vao ba bai toan **khong
 giai duoc bang CRUD**: tranh chap ghe khi nhieu nguoi cung bam, thanh toan bat dong bo voi
 webhook den tre hoac khong den, va tim diem nghen bang so lieu thay vi bang linh cam.
@@ -14,14 +23,15 @@ webhook den tre hoac khong den, va tim diem nghen bang so lieu thay vi bang linh
 |---|---|
 | **200 luong** cung gianh mot ghe | dung **1** thanh cong, 199 nhan 409, **0** loi khac |
 | seat map duoi tai (p95) | **1,05 s → 34 ms** sau khi do va toi uu (30 lan) |
-| **171 test** tren PostgreSQL that | khong dung H2, khong mock database |
+| **174 test** tren PostgreSQL that | khong dung H2, khong mock database |
 
 Moi bat bien quan trong deu co test **da tung thay do**: truoc khi tin mot luoi an toan,
 toi go no ra de xem thu co that su rach khong.
 
-## Chay thu
+## Chay thu tren may minh
 
-Chi can Docker. Khong can cai Java hay Maven.
+Neu chi muon xem thi dung link o dau trang, khong can lam gi ca. Phan nay danh cho ai muon
+chay tren may minh — chi can Docker, khong can cai Java hay Maven.
 
 ```bash
 git clone https://github.com/trantho1615/cinebook && cd cinebook
@@ -30,9 +40,6 @@ docker compose --profile full up --build
 ```
 
 Roi mo **http://localhost:8080**, bam "Dung tai khoan demo".
-
-Muon thay phan hay nhat: mo **hai cua so** cung mot suat chieu, giu ghe o cua so nay va
-nhin cua so kia doi mau ngay lap tuc.
 
 | | Dia chi |
 |---|---|
