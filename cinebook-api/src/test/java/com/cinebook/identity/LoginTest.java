@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
 
+import java.util.Base64;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,12 +78,35 @@ class LoginTest extends AbstractApiTest {
         assertThat(response.getBody().get("role").asText()).isEqualTo("CUSTOMER");
     }
 
+    /**
+     * Doi ky tu DAU cua phan chu ky, khong phai ky tu cuoi.
+     *
+     * Ban dau test nay doi ky tu cuoi cung cua token, va no FLAKY khoang 6,25% so lan chay.
+     * Chu ky HS256 dai 32 byte; base64url cua 32 byte la 43 ky tu, tuc 43*6 = 258 bit ma
+     * hoa cho 256 bit co nghia. Hai bit cuoi cua ky tu thu 43 la BIT DEM va bo giai ma bo
+     * qua chung, nen 4 trong 64 ky tu o vi tri do giai ra DUNG 32 byte cu: token "bi sua"
+     * thuc ra khong doi gi, chu ky van hop le va /auth/me tra 200.
+     *
+     * Da lam CI do that: run 33741674489, "expected: 401 UNAUTHORIZED but was: 200 OK".
+     * O ky tu dau cua chu ky thi ca 6 bit deu co nghia, nen doi la chac chan doi.
+     *
+     * Khang dinh ve chuKySua canh chinh dieu do: ai quay lai cach doi ky tu cuoi se thay
+     * test do voi thong bao ro rang, thay vi mot lan CI do ngau nhien sau vai thang.
+     */
     @Test
     void token_bi_sua_chu_ky_bi_tu_choi_401() {
         String token = login(EMAIL, PASSWORD).getBody().get("accessToken").asText();
-        // Doi mot ky tu trong phan chu ky -> chu ky khong con khop
-        String tampered = token.substring(0, token.length() - 1)
-                + (token.endsWith("A") ? "B" : "A");
+
+        int viTriChuKy = token.lastIndexOf('.') + 1;
+        String tampered = token.substring(0, viTriChuKy)
+                + (token.charAt(viTriChuKy) == 'A' ? 'B' : 'A')
+                + token.substring(viTriChuKy + 1);
+
+        byte[] chuKyGoc = Base64.getUrlDecoder().decode(token.substring(viTriChuKy));
+        byte[] chuKySua = Base64.getUrlDecoder().decode(tampered.substring(viTriChuKy));
+        assertThat(chuKySua)
+                .as("phai doi that su cac byte cua chu ky — xem ghi chu ve bit dem o tren")
+                .isNotEqualTo(chuKyGoc);
 
         var response = client().get()
                 .uri("/auth/me")
