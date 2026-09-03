@@ -45,3 +45,12 @@ Thumbs.db
 # Test & tooling output
 /load-test/results/
 .claude/
+
+# Tai lieu qua trinh xay dung — giu tren may, khong day len repo.
+# Repo nay mo ta SAN PHAM: kien truc, ket qua do tai, chinh sach bi mat. Con ke hoach
+# tung milestone, spec goc, kich ban quay video va runbook ha tang rieng thi thuoc ve
+# nguoi lam ra no, khong thuoc ve nguoi doc no.
+docs/plans/
+docs/specs/
+docs/kich-ban-demo.md
+docs/huong-dan-deploy.md

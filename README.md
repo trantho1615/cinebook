@@ -124,7 +124,7 @@ Integration test chay tren PostgreSQL 18 that qua Testcontainers, **khong dung H
 partial index, `EXCLUDE USING gist` va `FOR UPDATE SKIP LOCKED` la nen tang cua thiet ke nay
 va H2 khong ho tro chung.
 
-Chay `clean verify` **khi da tat `docker compose`**: mot lan Milestone 6 co test xanh gia vi
+Chay `clean verify` **khi da tat `docker compose`**: da co lan test xanh gia vi
 Redis cua compose dang chay, va CI moi bat duoc.
 
 ### Do tai
@@ -137,10 +137,6 @@ So lieu day du kem dieu kien do: [`docs/ket-qua-do-tai.md`](docs/ket-qua-do-tai.
 ## Tai lieu
 
 - [Kien truc — sau van de va cach giai](docs/kien-truc.md)
-- [Thiet ke chi tiet (spec goc)](docs/specs/2026-08-11-cinebook-core-design.md)
 - [Ket qua do tai truoc/sau](docs/ket-qua-do-tai.md)
-- [Kich ban video demo](docs/kich-ban-demo.md)
-- [Huong dan deploy len AWS](docs/huong-dan-deploy.md)
 - [Chinh sach ve bi mat trong repo](SECURITY.md)
-- [Ke hoach tung milestone](docs/plans/) — chin milestone, moi cai ghi lai ca nhung cho lam
-  sai va cach phat hien ra
+- [Kich ban do tai bang k6](load-test/README.md)

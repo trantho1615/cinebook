@@ -83,7 +83,7 @@ for (Map<String, Object> row : jdbc.queryForList(SQL_SEATS, ...)) {   // 96 gh�
 
 Một lượt xem sơ đồ ghế không phải 3 lượt truy vấn mà là **99**: 1 header + 1 seats + **96 lượt đọc bảng giá** + 1 lượt đọc hold. Mỗi lượt mượn và trả một connection từ pool 10.
 
-Điều đáng nói: chính lớp `PriceQueryJpa` đã ghi chú từ Milestone 3 rằng nó cố ý đọc lại mỗi lần, kèm câu *"tối ưu khi đã đo, không tối ưu vì linh cảm"*. Đây là lúc đã đo.
+Điều đáng nói: chính lớp `PriceQueryJpa` đã ghi chú ngay từ đầu rằng nó cố ý đọc lại mỗi lần, kèm câu *"tối ưu khi đã đo, không tối ưu vì linh cảm"*. Đây là lúc đã đo.
 
 **Cách sửa: `PriceQuery.bangGia()` trả một bản chụp, đọc một lần rồi dùng cho cả 96 ghế.** Bản chụp chỉ sống trong phạm vi một lần gọi — **không phải cache**, nên không có chuyện trả giá cũ. Không thêm Redis, không thêm TTL, không thêm gì phải vô hiệu hoá.
 
@@ -151,7 +151,7 @@ Muốn nối thì phải thêm cột `trace_context` vào `outbox_events`, ghi `
 
 **Không có span cho từng truy vấn DB.** Micrometer không tự đo `JdbcTemplate`; muốn có thì phải thêm `datasource-micrometer-spring-boot`. Với dự án này thì `EXPLAIN ANALYZE` và metric HikariCP đã đủ để tìm ra điểm nghẽn, nên chưa thêm.
 
-## Một cái bẫy của build, phát hiện khi làm milestone này
+## Một cái bẫy của build
 
 Fat jar của `cinebook-worker` **gói `cinebook-api` lấy từ `~/.m2`**, không phải từ thư mục `target/` vừa build. Quan sát được: sau `mvn -DskipTests package` toàn reactor, jar worker vẫn chứa `cinebook-api-0.1.0-SNAPSHOT.jar` cũ hai ngày (thiếu hẳn `SweepExpiredHoldsUseCase`), và worker chết lúc khởi động với `FileNotFoundException: class path resource [...SweepExpiredHoldsUseCase.class] cannot be opened`.
 
@@ -187,6 +187,6 @@ Sáu panel, đọc từ trái sang:
 | Ghế sweeper đã nhả (cộng dồn) | 6 ghế, đúng bằng dòng log `Sweeper nha 6 ghe het han` của worker |
 | Độ trễ giữ ghế (p95/p99) | 10–40 ms |
 
-**Ảnh này lúc đầu không chụp được**: phiên trình duyệt tự động render ra khung trống dù dashboard nạp đúng và truy vấn có số liệu. Nguyên nhân là extension **Dark Reader** — đúng thứ đã làm sai lệch việc kiểm tra giao diện ở Milestone 7. Tắt nó đi là panel hiện bình thường. Ai chụp lại để đưa vào tài liệu thì nhớ tắt trước.
+**Ảnh này lúc đầu không chụp được**: phiên trình duyệt tự động render ra khung trống dù dashboard nạp đúng và truy vấn có số liệu. Nguyên nhân là extension **Dark Reader** — đúng thứ đã làm sai lệch việc kiểm tra giao diện trước đó. Tắt nó đi là panel hiện bình thường. Ai chụp lại để đưa vào tài liệu thì nhớ tắt trước.
 
 **Một panel phải sửa vì nó vô dụng trong demo**: "Ghế sweeper nhả" ban đầu dùng `increase(cinebook_sweeper_released_total[5m])`, và counter vừa xuất hiện thì `increase` không vẽ gì — panel nằm `No data` suốt dù worker vừa nhả 6 ghế. Đổi sang `sum(cinebook_sweeper_released_total)` (cộng dồn) thì thấy ngay.

@@ -53,4 +53,4 @@ Nếu công cụ quét báo động về những dòng này, đó là **báo đ�
 3. `chmod 600 .env`
 4. Đổi mật khẩu Postgres nếu database đó chứa dữ liệu thật.
 
-Chi tiết: [`docs/huong-dan-deploy.md`](docs/huong-dan-deploy.md).
+`docker-compose.prod.yml` khai các biến này dưới dạng `${VAR:?}`, nên thiếu bất kỳ biến nào là compose từ chối khởi động kèm tên biến còn thiếu — không có đường nào chạy lên với cấu hình nửa vời.
