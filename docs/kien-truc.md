@@ -31,7 +31,7 @@ Ranh giới này có ý nghĩa vận hành cụ thể: **worker chết thì hệ
 
 Hai luật kiến trúc được ép ở tầng build, không dựa vào kỷ luật cá nhân:
 
-- Module chỉ được phụ thuộc vào package `api` của module khác — [`ModuleBoundaryTest`](../cinebook-api/src/test/java/com/cinebook/architecture/ModuleBoundaryTest.java). Luật này đã bắt lỗi trong thiết kế của chính tôi **bốn lần** qua chín milestone.
+- Module chỉ được phụ thuộc vào package `api` của module khác — [`ModuleBoundaryTest`](../cinebook-api/src/test/java/com/cinebook/architecture/ModuleBoundaryTest.java). Luật này đã bắt lỗi trong thiết kế của chính tôi **bốn lần**.
 - Worker không được khai báo `@RestController` — [`WorkerApplicationTest`](../cinebook-worker/src/test/java/com/cinebook/worker/WorkerApplicationTest.java).
 
 ---
@@ -112,7 +112,7 @@ Sửa: đọc bảng giá **một lần** rồi dùng cho cả phòng.
 
 **Đường giữ ghế nhanh lên 4,6 lần dù không sửa một dòng nào của nó** — bằng chứng rằng nút thắt là tài nguyên dùng chung.
 
-**Không thêm cache Redis**, dù đó là giả thuyết đứng đầu ban đầu: sau khi sửa, p95 cách ngưỡng 300 ms rất xa. Thêm một lớp có thể trả dữ liệu cũ để đổi lấy khoản lợi mà số liệu không đòi là đi ngược nguyên tắc của chính milestone đó.
+**Không thêm cache Redis**, dù đó là giả thuyết đứng đầu ban đầu: sau khi sửa, p95 cách ngưỡng 300 ms rất xa. Thêm một lớp có thể trả dữ liệu cũ để đổi lấy khoản lợi mà số liệu không đòi là đi ngược nguyên tắc của chính phần việc đó.
 
 **Chứng minh.** [`docs/ket-qua-do-tai.md`](ket-qua-do-tai.md) có số liệu kèm điều kiện đo, [`PriceTableTest`](../cinebook-api/src/test/java/com/cinebook/catalog/PriceTableTest.java) giữ tính đúng đắn của phần tối ưu.
 
@@ -133,6 +133,6 @@ Người phỏng vấn giỏi sẽ hỏi về những chỗ trống. Đây là d
 
 ## Đọc thêm
 
-- [Thiết kế chi tiết (spec gốc)](specs/2026-08-11-cinebook-core-design.md)
-- [Số liệu đo tải](ket-qua-do-tai.md)
-- [Kế hoạch từng milestone](plans/) — chín milestone, mỗi cái ghi lại cả những chỗ tôi làm sai và cách phát hiện
+- [Số liệu đo tải](ket-qua-do-tai.md) — điều kiện đo, con số trước/sau, và cách tìm ra điểm nghẽn
+- [Kịch bản đo tải bằng k6](../load-test/README.md)
+- [Chính sách về bí mật trong repo](../SECURITY.md)

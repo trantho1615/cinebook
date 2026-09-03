@@ -25,6 +25,17 @@ dist/
 *.local.properties
 application-local.yml
 
+# Khoa rieng. Khoa SSH cua EC2 hay bi tai ve thang thu muc du an, va tu do chi cach
+# GitHub cong khai dung mot lenh `git add -A`. SECURITY.md khang dinh chua tung co bi mat
+# that nao duoc commit — nhung truoc dong nay do la may man chu khong phai bao ve.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+
 # Logs & OS
 *.log
 logs/
@@ -34,3 +45,12 @@ Thumbs.db
 # Test & tooling output
 /load-test/results/
 .claude/
+
+# Tai lieu qua trinh xay dung — giu tren may, khong day len repo.
+# Repo nay mo ta SAN PHAM: kien truc, ket qua do tai, chinh sach bi mat. Con ke hoach
+# tung milestone, spec goc, kich ban quay video va runbook ha tang rieng thi thuoc ve
+# nguoi lam ra no, khong thuoc ve nguoi doc no.
+docs/plans/
+docs/specs/
+docs/kich-ban-demo.md
+docs/huong-dan-deploy.md
