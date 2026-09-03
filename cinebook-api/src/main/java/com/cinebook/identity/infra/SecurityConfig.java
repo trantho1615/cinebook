@@ -29,6 +29,23 @@ import java.io.IOException;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Duyet phim, rap va lich chieu: khach vang lai phai xem duoc truoc khi quyet dinh tao
+     * tai khoan.
+     */
+    private static final String[] DUYET_CONG_KHAI = {
+            "/movies/**", "/cinemas/**", "/showtimes/**"
+    };
+
+    /**
+     * Duong dan cua UI demo. Liet ke dung ten chu khong dung mot dau sao chung chung:
+     * "/**" se nuot ca nhung endpoint chua duoc liet ke o tren no.
+     */
+    private static final String[] FILE_TINH = {
+            "/", "/index.html", "/seats.html", "/checkout.html",
+            "/css/**", "/js/**", "/favicon.ico"
+    };
+
     private final JwtAuthenticationFilter jwtFilter;
     private final ObjectMapper objectMapper;
 
@@ -73,17 +90,20 @@ public class SecurityConfig {
                         // Webhook den tu cong thanh toan, khong co token cua nguoi dung.
                         // Chu ky HMAC la thu xac thuc cho endpoint nay.
                         .requestMatchers(HttpMethod.POST, "/webhooks/**").permitAll()
-                        // Duyet phim, rap va lich chieu khong can dang nhap — khach vang lai
-                        // phai xem duoc truoc khi quyet dinh tao tai khoan. Chi mo GET;
-                        // duong ghi nam duoi /admin/** va van duoc @PreAuthorize canh.
-                        .requestMatchers(HttpMethod.GET,
-                                "/movies/**", "/cinemas/**", "/showtimes/**").permitAll()
-                        // UI demo la file tinh. Liet ke dung nhung duong dan cua no chu
-                        // khong dung mot dau sao chung chung: "/**" se nuot ca nhung endpoint
-                        // chua duoc liet ke o tren.
-                        .requestMatchers(HttpMethod.GET,
-                                "/", "/index.html", "/seats.html", "/checkout.html",
-                                "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        // Chi mo duong DOC; duong ghi nam duoi /admin/** va van duoc
+                        // @PreAuthorize canh.
+                        //
+                        // Vi sao ca GET va HEAD: RFC 9110 muc 9.3.2 doi HEAD tra loi giong
+                        // het GET tru phan than, va cac dich vu giam sat uptime mac dinh gui
+                        // HEAD. Truoc day chi liet ke GET, nen HEAD roi xuong
+                        // anyRequest().authenticated() va an 401 — trang van song ma monitor
+                        // bao chet. Phat hien luc kiem chung deploy that bang `curl -I`.
+                        // HEAD khong lo them gi: no chi tra ve header cua mot GET da cong khai.
+                        // HeadRequestTest canh ca hai chieu cua chuyen nay.
+                        .requestMatchers(HttpMethod.GET, DUYET_CONG_KHAI).permitAll()
+                        .requestMatchers(HttpMethod.HEAD, DUYET_CONG_KHAI).permitAll()
+                        .requestMatchers(HttpMethod.GET, FILE_TINH).permitAll()
+                        .requestMatchers(HttpMethod.HEAD, FILE_TINH).permitAll()
                         // Kenh realtime cua so do ghe. Cong khai vi chinh so do ghe da
                         // cong khai (GET /showtimes/** o tren) — no chi mang mau ghe, khong
                         // mang thong tin cua ai ca.
