@@ -25,6 +25,17 @@ dist/
 *.local.properties
 application-local.yml
 
+# Khoa rieng. Khoa SSH cua EC2 hay bi tai ve thang thu muc du an, va tu do chi cach
+# GitHub cong khai dung mot lenh `git add -A`. SECURITY.md khang dinh chua tung co bi mat
+# that nao duoc commit — nhung truoc dong nay do la may man chu khong phai bao ve.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+
 # Logs & OS
 *.log
 logs/
