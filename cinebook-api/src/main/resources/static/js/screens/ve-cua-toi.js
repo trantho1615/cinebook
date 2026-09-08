@@ -40,7 +40,7 @@ function danhSach(ds) {
             <div class="text-chuMo text-xs mt-0.5">${new Date(v.startAt)
               .toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
             <div class="so text-nhan text-xs mt-1">${thoatHtml(v.code)}</div></div>
-          <span class="text-[10px] uppercase tracking-wide border rounded px-2 py-1 h-fit ${lop}">${ten}</span>
+          <span class="text-[10px] uppercase tracking-wide border rounded px-2 py-1 h-fit ${lop}">${thoatHtml(ten)}</span>
         </a>`;
     }).join("");
     return el;

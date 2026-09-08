@@ -34,6 +34,10 @@ export function render({ id }) {
         if (nut) nut.onclick = async () => {
             nut.disabled = true;
             await del(`/bookings/${id}`);
+            // Kiem tra sau await: router co the da thay man hinh nay bang man hinh khac
+            // trong luc cho xoa. Dieu huong luc do se cuop quyen dieu khien tu nguoi dung,
+            // dung nhu loi da sua trong thanh-toan.js.
+            if (!el.isConnected) return;
             location.hash = "#/ve-cua-toi";
         };
     }).catch(() => {

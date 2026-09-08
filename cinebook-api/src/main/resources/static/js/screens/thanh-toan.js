@@ -127,6 +127,10 @@ export function render({ id }) {
         doiKetQua = setInterval(async () => {
             if (luot !== soLuot) { clearInterval(doiKetQua); doiKetQua = null; return; }
             const moi = await get(`/bookings/${don.bookingId}`);
+            // Kiem LAI sau await: huyBo() co the da chay trong luc cau nay dang bay. Dieu
+            // huong tu mot man hinh nguoi dung da roi la keo ho di khoi cho ho dang dung —
+            // te hon mot ro ri, vi no cuop quyen dieu khien.
+            if (luot !== soLuot) return;
             if (moi.status === "CONFIRMED") {
                 clearInterval(doiKetQua); doiKetQua = null;
                 location.hash = `#/ve/${don.bookingId}`;
