@@ -49,6 +49,16 @@ export function post(duongDan, than) {
     return goi('POST', duongDan, than ?? {});
 }
 
+export function del(duongDan) {
+    return goi('DELETE', duongDan);
+}
+
+export async function dangKy(email, matKhau, hoTen, dienThoai) {
+    await goi('POST', '/auth/register',
+        { email, password: matKhau, fullName: hoTen, phone: dienThoai });
+    return dangNhap(email, matKhau);
+}
+
 function luuPhien(ketQua) {
     // sessionStorage chu khong phai localStorage: dong tab la mat phien. Ca hai deu doc
     // duoc bang JavaScript nen deu khong chong duoc XSS — sessionStorage chi thu hep cua so
