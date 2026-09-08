@@ -163,6 +163,18 @@ and H2 does not support them.
 Run `clean verify` **with `docker compose` stopped**. A test once passed only because a
 Compose Redis container happened to be running locally, and CI was what caught it.
 
+The front-end has its own checks, run separately from the Maven build:
+
+```bash
+node --test web-test/*.test.js     # router and seat-state mapping
+node web-test/tuong-phan.js        # WCAG AA contrast on the colour tokens
+npx playwright test                # one end-to-end booking flow, needs the app running
+```
+
+The end-to-end scenario is not in CI — it needs Postgres, Redis and the application
+running, which costs more to stand up than one scenario is worth. Run it locally before
+a release.
+
 ### Load testing
 
 The k6 flash-sale scenario lives in [`load-test/README.md`](load-test/README.md). Full

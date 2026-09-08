@@ -40,3 +40,5 @@ jobs:
           node-version: '22'
       - name: Unit tests
         run: node --test web-test/*.test.js
+      - name: Contrast check
+        run: node web-test/tuong-phan.js

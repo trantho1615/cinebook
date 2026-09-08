@@ -44,6 +44,8 @@ Thumbs.db
 
 # Test & tooling output
 /load-test/results/
+/test-results/
+/playwright-report/
 .claude/
 
 # Tai lieu qua trinh xay dung — giu tren may, khong day len repo.
