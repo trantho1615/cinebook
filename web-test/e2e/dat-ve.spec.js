@@ -25,9 +25,12 @@ test("dat ve tu dau den cuoi", async ({ page }) => {
 
     await page.getByRole("button", { name: /^Giu \d+ ghe$/ }).click();
 
-    // Dong ho dem nguoc phai chay. Khong ghim /^0\d/: thoi gian giu la 10 phut nen gia tri
-    // dau tien co the la "10:00".
+    // Dong ho dem nguoc phai CHAY, khong chi dung dinh dang. Doc hai lan cach nhau hon mot
+    // giay va doi gia tri phai khac di — mot dong ho dung yen van khop /^\d\d:\d\d$/.
     await expect(page.locator("#conlai")).toHaveText(/^\d\d:\d\d$/);
+    const lanDau = await page.locator("#conlai").textContent();
+    await page.waitForTimeout(1500);
+    await expect(page.locator("#conlai")).not.toHaveText(lanDau);
 
     // Thanh toan can HAI buoc. "Thanh toan" chi tao giao dich o trang thai cho; webhook chi
     // den khi cong gia lap duoc bam. Chi lam buoc dau roi doi la doi mai mai.

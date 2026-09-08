@@ -48,7 +48,7 @@ export function render({ id }) {
           <div class="grid lg:grid-cols-[1fr_230px] gap-7">
             <div>
               <div class="h-[3px] rounded bg-gradient-to-r from-transparent via-[#2E2E36] to-transparent"></div>
-              <div class="text-center text-[10px] tracking-[0.22em] text-[#5E5E68] mt-1.5 mb-4">MAN HINH</div>
+              <div class="text-center text-[10px] tracking-[0.22em] text-[#787882] mt-1.5 mb-4">MAN HINH</div>
               <div id="luoi" class="overflow-x-auto"></div>
               <div id="chuthich" class="flex gap-4 justify-center mt-4 text-xs text-chuMo flex-wrap"></div>
             </div>
