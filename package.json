@@ -1,0 +1,12 @@
+{
+  "name": "cinebook-web-test",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test web-test/*.test.js",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
