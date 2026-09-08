@@ -1,5 +1,6 @@
 import { nguoiDung, datNguoiDung, theoDoi } from "../store.js";
-import { dangXuat } from "../api.js";
+import { dangXuat, token } from "../api.js";
+import { thoatHtml } from "../an-toan.js";
 
 export function dungHeader() {
     const el = document.createElement("header");
@@ -16,9 +17,13 @@ export function dungHeader() {
             </nav>
             <div class="ml-auto text-sm">
               ${u
-                ? `<span class="text-chuMo mr-3">${u.email}</span>
+                ? `<span class="text-chuMo mr-3">${thoatHtml(u.email)}</span>
                    <button id="thoat" class="text-chuMo hover:text-chu bg-transparent border-0 cursor-pointer">Thoat</button>`
-                : `<a href="#/dang-nhap" class="text-nhan no-underline">Dang nhap</a>`}
+                : token()
+                  // Co token nhung chua biet la ai: dang hoi /auth/me. Ve "Dang nhap" luc nay
+                  // la noi mot dieu co the sai, roi tu sua truoc mat nguoi dung.
+                  ? `<span class="text-chuMo">&nbsp;</span>`
+                  : `<a href="#/dang-nhap" class="text-nhan no-underline">Dang nhap</a>`}
             </div>
           </div>`;
         const nut = el.querySelector("#thoat");

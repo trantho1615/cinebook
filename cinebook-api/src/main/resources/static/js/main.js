@@ -9,8 +9,10 @@ const dinhTuyen = { dangNhap, khongTimThay };
 
 async function batDau() {
     document.getElementById("header").append(dungHeader());
-    // Con token cu thi khoi phuc phien truoc khi ve man hinh dau tien, de header khong
-    // nhay tu "Dang nhap" sang ten nguoi dung ngay truoc mat.
+    // Con token cu thi khoi phuc phien truoc khi ve man hinh dau tien: man hinh dau tien
+    // (vd ve-cua-toi) can biet nguoi dung la ai ngay tu luc render, khong the doi sau.
+    // Rieng header tu no da xu ly khoang thoi gian cho nay (xem ui/header.js) nen khong
+    // ve nham "Dang nhap" roi tu sua.
     if (token()) {
         try { datNguoiDung(await get("/auth/me")); } catch { /* token het han, coi nhu chua dang nhap */ }
     }
