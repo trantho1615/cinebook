@@ -6,23 +6,36 @@ import { moHopThoai } from "../ui/hopthoai.js";
 import { dungCanhBao } from "../ui/canhbao.js";
 
 let ketNoiHienTai = null;
+// Dat true khi router roi man hinh nay. Can thiet vi hai cau GET dau tien khong huy duoc:
+// neu nguoi dung roi di truoc khi chung tra ve, dung() van chay tren mot phan tu da bi go
+// khoi trang va mo mot WebSocket khong ai con giu tham chieu de dong.
+let daRoi = false;
 
 export function render({ id }) {
+    daRoi = false;
     const el = document.createElement("div");
     el.className = "max-w-5xl mx-auto px-4 py-8 pb-32 lg:pb-8";
     el.innerHTML = `<div class="text-chuMo">Dang tai so do ghe...</div>`;
 
     let danhSachGhe = [];
     const dangChon = new Set();
+    let gheCoTab = null;   // Ghe duy nhat nam trong chuoi Tab (roving tabindex).
 
     Promise.all([get(`/showtimes/${id}`), get(`/showtimes/${id}/seats`)])
-        .then(([suat, ghe]) => { danhSachGhe = ghe; dung(suat); })
-        .catch(() => { el.innerHTML =
-            `<div class="serif text-2xl text-center py-20">Khong tim thay suat chieu</div>`; });
+        .then(([suat, ghe]) => {
+            if (daRoi) return;
+            danhSachGhe = ghe;
+            dung(suat);
+        })
+        .catch(() => {
+            if (daRoi) return;
+            el.innerHTML =
+                `<div class="serif text-2xl text-center py-20">Khong tim thay suat chieu</div>`;
+        });
 
     function dung(suat) {
         el.innerHTML = `
-          <a href="#/phim/${suat.movieId}" class="text-chuMo text-sm no-underline">&larr; Quay lai</a>
+          <a href="#/phim/${thoatHtml(suat.movieId)}" class="text-chuMo text-sm no-underline">&larr; Quay lai</a>
           <h1 class="serif text-3xl mt-2 mb-1">${thoatHtml(suat.movieTitle)}</h1>
           <div class="text-chuMo text-sm mb-6">${thoatHtml(suat.cinemaName)} · ${thoatHtml(suat.roomName)} ·
             ${new Date(suat.startAt).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit",
@@ -67,6 +80,13 @@ export function render({ id }) {
         // nghia la phai Tab lai tu dau de chon ghe thu hai — dieu do bien phim mui ten
         // thanh vo dung dung o luc no can dung nhat.
         const gheDangFocus = document.activeElement?.dataset?.ghe;
+        if (gheDangFocus) gheCoTab = gheDangFocus;
+        const conChonDuoc = (id) => danhSachGhe.some(
+            (g) => g.seatId === id && thuocTinhGhe(g, dangChon.has(id)).chonDuoc);
+        if (!gheCoTab || !conChonDuoc(gheCoTab)) {
+            // Ghe giu tab stop vua bi nguoi khac lay mat: chuyen sang ghe chon duoc dau tien.
+            gheCoTab = danhSachGhe.find((g) => thuocTinhGhe(g, dangChon.has(g.seatId)).chonDuoc)?.seatId ?? null;
+        }
         const theoHang = {};
         for (const g of danhSachGhe) (theoHang[g.rowLabel] ??= []).push(g);
 
@@ -91,6 +111,8 @@ export function render({ id }) {
                 nut.setAttribute("aria-label", t.nhan);
                 nut.dataset.ghe = g.seatId;
                 nut.disabled = !t.chonDuoc;
+                // Roving tabindex: chi mot o nam trong chuoi Tab, phim mui ten doi o do.
+                nut.tabIndex = g.seatId === gheCoTab ? 0 : -1;
                 nut.onclick = () => doiChon(g.seatId);
                 dong.append(nut);
             }
@@ -118,7 +140,12 @@ export function render({ id }) {
         const soCot = el.querySelectorAll('#luoi [role="row"]')[0].children.length;
         const buoc = e.key in huong ? huong[e.key] : (e.key === "ArrowDown" ? soCot : -soCot);
         const ke = nut[i + buoc];
-        if (ke) ke.focus();
+        if (ke) {
+            document.activeElement.tabIndex = -1;
+            ke.tabIndex = 0;
+            gheCoTab = ke.dataset.ghe;
+            ke.focus();
+        }
     }
 
     function doiChon(seatId) {
@@ -145,7 +172,7 @@ export function render({ id }) {
         if (!chon.length) { t.textContent = "Chon ghe de tiep tuc."; return; }
         t.innerHTML = `
           <div class="text-chuMo text-[10px] tracking-wider uppercase">Ghe da chon</div>
-          <div class="text-base mt-1.5">${chon.map((g) => g.label).join(", ")}</div>
+          <div class="text-base mt-1.5">${thoatHtml(chon.map((g) => g.label).join(", "))}</div>
           <div class="flex justify-between items-baseline mt-3 pt-2.5 border-t border-vien">
             <span class="text-chuMo text-sm">Tong</span>
             <span class="so text-nhan text-lg font-semibold">${dinhDangTien(tong)}d</span></div>
@@ -188,5 +215,6 @@ export function render({ id }) {
 }
 
 export function huyBo() {
+    daRoi = true;
     if (ketNoiHienTai) { ketNoiHienTai.dong(); ketNoiHienTai = null; }
 }
