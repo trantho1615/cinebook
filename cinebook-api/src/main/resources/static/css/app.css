@@ -68,8 +68,15 @@ body {
         transparent, transparent 3px, #202024 3px, #202024 4px);
 }
 
-/* Vong focus phai nhin ro tren nen toi. Mac dinh cua trinh duyet khong du. */
-.ghe:focus-visible, a:focus-visible, button:focus-visible {
+/* Vong focus phai nhin ro tren nen toi. Mac dinh cua trinh duyet khong du.
+   Ke ca o input: mot form dang nhap khong co vong focus ro rang la mot form
+   khong dung duoc bang ban phim. */
+.ghe:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
     outline: 2px solid var(--nhan);
     outline-offset: 2px;
 }
