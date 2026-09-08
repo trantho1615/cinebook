@@ -20,17 +20,33 @@ is involved. The user interface is in Vietnamese.
 
 ## Results
 
-| Metric | Result |
+Measured on a 12-million-row database, not on demo data.
+
+| | Measured |
 |---|---|
-| 200 virtual threads racing for one seat | exactly **1** succeeds, 199 receive `409`, **0** other errors |
-| Seat map p95 under load | **1.05 s → 34 ms** after profiling and optimisation (30×) |
-| Test suite | **174 tests** against real PostgreSQL — no H2, no mocked database |
+| **Correctness under contention** | 200 virtual threads race for one seat: exactly **1** succeeds, 199 receive `409`, **0** other errors |
+| **Throughput** | **2,000 req/s at p95 25.6 ms**; saturates at ~2,300 req/s |
+| **Optimisation** | p95 at 2,000 req/s: **234 ms → 25.6 ms (9.1×)**, ceiling **+21 %** |
+| **Earlier optimisation** | seat map under contention: p95 **1.05 s → 34 ms (30×)** |
+| **Tests** | **182** against real PostgreSQL — no H2, no mocked database |
+
+Neither optimisation touched a query. Behind one seat map request sit four SQL statements
+whose combined execution time is **0.104 ms** — while a `SELECT 1` that does nothing at all
+costs **0.658 ms** across the container network. The bottleneck was never the database
+doing work; it was the number of times the application asked. Both fixes removed round
+trips.
+
+The obvious follow-up — raise the connection pool, since 190 threads were queued for it —
+was measured across four pool sizes and **rejected**: throughput did not move and p99 grew
+from 1.6 s to 4.3 s. A full queue turned out to be a symptom, not the cause. An earlier
+proposal to put Redis in front of the seat map was dropped for the same reason: the numbers
+did not ask for it.
 
 Every important invariant is covered by a test **that has been observed failing**. Before a
 safety net is trusted here, it is deliberately removed to confirm it actually tears.
 
-Absolute numbers depend on the machine. The measurement conditions are documented in full
-alongside the results.
+Absolute numbers depend on the machine; what is worth reading is the before/after ratio on
+one machine. Full conditions are recorded with the results.
 
 ## Architecture
 
