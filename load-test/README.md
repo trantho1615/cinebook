@@ -47,3 +47,41 @@ dung ti le xung dot.
 
 **Vung ghe hep la co y.** Trai deu 96 ghe thi gan nhu khong ai dung ai va con so thu duoc
 se dep mot cach vo nghia. Cho gianh nhau moi la thu dang do.
+
+## Sinh du lieu o quy mo lon
+
+`flash-sale.js` chay tren du lieu cua profile `demo`: ~477 suat chieu, 864 ghe. O kich thuoc
+do khong index nao kip co y nghia — Postgres seq scan vai tram dong con nhanh hon di qua
+index, nen `EXPLAIN ANALYZE` khong noi duoc dieu gi.
+
+`seed-large.sql` nap du lieu o quy mo mot chuoi rap sau nhieu nam:
+
+```bash
+docker exec -i cinebook-postgres psql -U cinebook -d cinebook \
+  -v st_per_room=22222 -v expired_per_st=50 -v booked_per_st=10 \
+  -v n_users=50000 -v n_bookings=2000000 -v n_outbox=2000000 \
+  -f - < load-test/seed-large.sql
+```
+
+Thu o quy mo nho truoc: `-v st_per_room=100 -v n_bookings=5000 -v n_outbox=5000`.
+
+Xoa di, giu nguyen du lieu demo:
+
+```bash
+docker exec -i cinebook-postgres psql -U cinebook -d cinebook -f - < load-test/seed-large-reset.sql
+```
+
+### Ba dieu script nay phai ton trong, va vi sao
+
+**Ghe phai thuoc dung phong cua suat chieu.** `seat_hold.seat_id` chi co khoa ngoai toi
+`seats`, khong ai ep no phai cung phong voi suat chieu. Sinh sai thi truy van seat map
+khong join duoc dong nao: bang co 12 trieu dong ma duong nong khong cham toi dong nao, va
+ca bai do thanh vo nghia. Bang `seed_ref_room_seat` giu dung rang buoc do.
+
+**Suat chieu khong duoc chong gio trong cung mot phong.** `showtimes` co
+`EXCLUDE USING gist (room_id WITH =, tstzrange(start_at, end_at) WITH &&)`. Rai gio ngau
+nhien la vi pham ngay. Moi phong duoc cap mot day khe tuan tu cach nhau 3 gio, suat dai 2
+gio. Toan bo nam trong qua khu xa de khong dung vao du lieu demo quanh hien tai.
+
+**`ANALYZE` la bat buoc, khong phai tuy chon.** Bo qua thi planner van dung thong ke cua
+bang vai tram dong va chon ke hoach sai hoan toan. Moi so do sau do deu vo nghia.
