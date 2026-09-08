@@ -58,3 +58,6 @@ docs/huong-dan-deploy.md
 # File do bo do tai sinh ra, phu thuoc mot lan chay cu the tren mot may cu the.
 load-test/showtime-ids.json
 load-test/throughput-summary.json
+
+# Mockup cua phien brainstorm truc quan
+.superpowers/
