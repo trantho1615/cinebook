@@ -105,10 +105,16 @@ export function render({ id }) {
             return;
         }
         if (ketQua === "fail") {
-            baoLoi("Thanh toan that bai. Ghe van duoc giu cho toi khi het gio.");
-            cong.querySelector("#cho").classList.add("hidden");
-            cong.querySelector("#ok").disabled = false;
-            cong.querySelector("#hong").disabled = false;
+            // Backend nha ghe ngay khi thanh toan that bai
+            // (ProcessPaymentUseCase -> releaseAfterFailedPayment). Don nay da xong;
+            // moi hai nut gia lap deu vo nghia tu day, nen khong bat lai chung.
+            cong.innerHTML = `
+              <div class="text-sm">Thanh toan that bai</div>
+              <p class="text-chuMo text-sm mt-2 leading-relaxed">
+                Ghe da duoc tra lai cho nguoi khac. Ban can chon lai ghe.</p>
+              <a href="#/" class="inline-block mt-3 bg-nhan text-nen font-bold px-4 py-2 rounded-md no-underline">
+                Chon lai ghe</a>`;
+            if (dongHo) { clearInterval(dongHo); dongHo = null; }
             return;
         }
         doiXacNhan(don);

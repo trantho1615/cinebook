@@ -21,9 +21,15 @@ export function render({ id }) {
               ${thoatHtml((v.seats ?? []).join(", "))}</div>
             <div class="so mt-1">${dinhDangTien(v.totalAmount)}d</div>
           </div>
-          ${v.status === "CONFIRMED" || v.status === "PENDING"
+          ${v.status === "PENDING"
             ? `<button id="huy" class="mt-5 w-full border border-vien text-chuMo py-2.5 rounded-md
-                                        bg-transparent cursor-pointer">Huy don</button>` : ""}`;
+                                        bg-transparent cursor-pointer">Huy don</button>`
+            : v.status === "CONFIRMED"
+              // Backend chi huy duoc don PENDING (CancelBookingUseCase: AND status = 'PENDING').
+              // Hien nut cho don da xac nhan la hua mot viec he thong khong lam duoc.
+              ? `<p class="text-chuMo text-sm mt-5 text-center">
+                   Ve da xac nhan khong huy duoc o day. Lien he rap neu can doi.</p>`
+              : ""}`;
         const nut = el.querySelector("#huy");
         if (nut) nut.onclick = async () => {
             nut.disabled = true;
