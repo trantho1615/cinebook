@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Toi uu o Milestone 8 doi cho doc bang gia: tu 96 luot (mot luot moi ghe) xuong mot luot
@@ -40,19 +43,28 @@ class PriceTableTest extends AbstractApiTest {
     }
 
     /**
-     * Ban chup chi song trong pham vi mot lan goi, KHONG phai cache.
+     * Doi phu thu trong database phai co hieu luc, va phai co trong mot khoang CO GIOI HAN.
      *
-     * Doi phu thu trong database roi doc lai phai thay gia moi ngay — neu khong thi day da
-     * thanh mot lop cache co the tra gia cu, va mot he thong ban ve tra gia cu la mot he
-     * thong ban sai gia.
+     * Bao dam cu manh hon: "lan doc ke tiep thay ngay". Milestone 10 do duoc rang moi lan
+     * doc bang nay ton mot vong mang 0,59 ms trong khi thoi gian thuc thi SQL chi la
+     * 0,0045 ms, va them mot cache co TTL (xem PriceQueryJpa). Day la mot su NOI LONG co
+     * chu y: du lieu cu bi gioi han boi TTL thay vi bien mat ngay.
+     *
+     * Test khong bi xoa di, no duoc viet lai de noi dung bao dam moi. Thu can chan van la
+     * thu cu: gia cu ton tai VO HAN. Neu ai do bo TTL va giu cache mai mai, test nay do.
      */
     @Test
-    void doi_phu_thu_trong_db_thi_lan_doc_ke_tiep_thay_ngay() {
+    void doi_phu_thu_trong_db_thi_thay_duoc_trong_khoang_TTL() {
         long giaCu = priceQuery.bangGia().priceFor(90_000, "VIP");
 
         db.update("UPDATE price_rules SET surcharge = surcharge + 5000 WHERE seat_type = 'VIP'");
         try {
-            assertThat(priceQuery.bangGia().priceFor(90_000, "VIP")).isEqualTo(giaCu + 5000);
+            // TTL trong test la 2 giay (AbstractApiTest). Cho toi 10 giay de khong flaky tren
+            // may cham, nhung van do neu cache khong bao gio het han.
+            await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+                    assertThat(priceQuery.bangGia().priceFor(90_000, "VIP"))
+                            .as("gia moi phai xuat hien sau khi TTL het han")
+                            .isEqualTo(giaCu + 5000));
         } finally {
             db.update("UPDATE price_rules SET surcharge = surcharge - 5000 WHERE seat_type = 'VIP'");
         }

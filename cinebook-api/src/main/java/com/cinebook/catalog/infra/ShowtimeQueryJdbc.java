@@ -4,6 +4,8 @@ import com.cinebook.catalog.api.PriceQuery;
 import com.cinebook.catalog.api.SeatView;
 import com.cinebook.catalog.api.ShowtimeDetail;
 import com.cinebook.catalog.api.ShowtimeQuery;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Read model duoc lay bang JDBC thuan chu khong bang JPA: day la duong doc nong
@@ -53,10 +56,49 @@ public class ShowtimeQueryJdbc implements ShowtimeQuery {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final PriceQuery priceQuery;
+    private final Counter luotNapGhe;
 
-    public ShowtimeQueryJdbc(NamedParameterJdbcTemplate jdbc, PriceQuery priceQuery) {
+    /**
+     * So do ghe cua mot phong, giu lai theo room_id.
+     *
+     * An toan vi ghe la bat bien sau khi phong duoc tao: chung duoc sinh mot lan trong
+     * POST /admin/cinemas/{id}/rooms va khong co endpoint nao sua, xoa, hay ghi is_active.
+     * Phong moi mang uuid moi nen khong bao gio dung vao dong da cache.
+     *
+     * CHI cache phan tinh. Gia mot ghe = showtimes.base_price + phu phi theo loai, tuc no
+     * phu thuoc SUAT CHIEU chu khong chi phu thuoc phong — cache ca gia se tra gia cua suat
+     * dau tien cho moi suat sau do, mot loi tinh tien im lang. Test
+     * cache_khong_lam_sai_gia_khi_hai_suat_chieu_khac_base_price giu lai su phan biet nay.
+     */
+    private final Map<UUID, List<GheTinh>> soDoGheTheoPhong = new ConcurrentHashMap<>();
+
+    public ShowtimeQueryJdbc(NamedParameterJdbcTemplate jdbc, PriceQuery priceQuery,
+                             MeterRegistry registry) {
         this.jdbc = jdbc;
         this.priceQuery = priceQuery;
+        this.luotNapGhe = Counter.builder("cinebook.reference.load")
+                .tag("bang", "seats")
+                .description("So lan doc bang tra cuu tinh tu database")
+                .register(registry);
+    }
+
+    /** Phan khong doi cua mot ghe. Gia khong nam o day, va do la chu y. */
+    private record GheTinh(UUID id, String rowLabel, int seatNumber, String seatType) {
+    }
+
+    private List<GheTinh> gheCuaPhong(UUID roomId) {
+        return soDoGheTheoPhong.computeIfAbsent(roomId, id -> {
+            luotNapGhe.increment();
+            List<GheTinh> ghe = new ArrayList<>();
+            for (Map<String, Object> row : jdbc.queryForList(SQL_SEATS, Map.of("roomId", id))) {
+                ghe.add(new GheTinh(
+                        (UUID) row.get("id"),
+                        (String) row.get("row_label"),
+                        ((Number) row.get("seat_number")).intValue(),
+                        (String) row.get("seat_type")));
+            }
+            return List.copyOf(ghe);
+        });
     }
 
     @Override
@@ -73,23 +115,20 @@ public class ShowtimeQueryJdbc implements ShowtimeQuery {
 
         // Hai cau SQL chu khong phai mot: gop so do ghe vao cung cau voi phan dau se
         // nhan ban toan bo thong tin phim va rap len 50-200 dong.
-        // Doc bang gia MOT lan cho ca phong. Truoc day vong lap goi priceQuery.priceFor cho
-        // tung ghe, va moi lan goi lai doc lai bang price_rules: mot so do ghe 96 cho tro
-        // thanh 96 luot truy van, moi luot muon mot connection.
+        //
+        // Ca hai nguon duoi day gio deu duoc giu trong bo nho, nen mot lan xem so do ghe
+        // chi con HAI vong toi database thay vi bon (xem ghi chu o soDoGheTheoPhong).
         PriceQuery.BangGia bangGia = priceQuery.bangGia();
 
         List<SeatView> seats = new ArrayList<>();
-        for (Map<String, Object> row : jdbc.queryForList(SQL_SEATS, Map.of("roomId", roomId))) {
-            String rowLabel = (String) row.get("row_label");
-            int seatNumber = ((Number) row.get("seat_number")).intValue();
-            String seatType = (String) row.get("seat_type");
+        for (GheTinh ghe : gheCuaPhong(roomId)) {
             seats.add(new SeatView(
-                    (UUID) row.get("id"),
-                    rowLabel,
-                    seatNumber,
-                    rowLabel + seatNumber,
-                    seatType,
-                    bangGia.priceFor(basePrice, seatType)));
+                    ghe.id(),
+                    ghe.rowLabel(),
+                    ghe.seatNumber(),
+                    ghe.rowLabel() + ghe.seatNumber(),
+                    ghe.seatType(),
+                    bangGia.priceFor(basePrice, ghe.seatType())));
         }
 
         return Optional.of(new ShowtimeDetail(

@@ -33,7 +33,9 @@ const SUAT_CHIEU = JSON.parse(open('./showtime-ids.json'));
 // Cac bac tai. Moi bac la mot scenario rieng chay noi tiep nhau, thay vi mot
 // ramping-arrival-rate lien tuc: nhu vay k6 cho ra so lieu TACH BACH cho tung bac, doc
 // duoc ngay ma khong phai tu cat bieu do.
-const BUOC = [100, 250, 500, 1000, 2000, 4000];
+// Ghi de bang bien moi truong de do mot bac duy nhat, vi du khi quet cac gia tri pool:
+//   -e BUOC=4000
+const BUOC = (__ENV.BUOC || '100,250,500,1000,2000,4000').split(',').map(Number);
 const GIAY_MOI_BUOC = 30;
 const GIAY_NGHI = 5;
 

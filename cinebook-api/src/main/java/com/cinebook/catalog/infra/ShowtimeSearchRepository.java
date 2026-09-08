@@ -20,6 +20,13 @@ public class ShowtimeSearchRepository {
      *
      * CAST(:param AS ...) la bat buoc: khi tham so la null, PostgreSQL khong suy duoc
      * kieu va bao "could not determine data type of parameter".
+     *
+     * LIMIT/OFFSET them o Milestone 10. Truoc do cau nay khong co gioi han nao, va voi
+     * 200 475 dong no cho ra:
+     *     Parallel Seq Scan + Sort Method: external merge  Disk: 4264kB
+     *     Execution Time: 229 ms
+     * cong voi 200 nghin ban ghi tuan tu hoa ra JSON — tren mot endpoint permitAll.
+     * ShowtimePaginationTest giu lai gioi han do.
      */
     private static final String SQL = """
             SELECT s.id         AS showtime_id,
@@ -43,6 +50,7 @@ public class ShowtimeSearchRepository {
                AND (CAST(:from AS timestamptz) IS NULL OR s.start_at >= CAST(:from AS timestamptz))
                AND (CAST(:to   AS timestamptz) IS NULL OR s.start_at <= CAST(:to   AS timestamptz))
              ORDER BY s.start_at, c.name, r.name
+             LIMIT :limit OFFSET :offset
             """;
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -52,8 +60,10 @@ public class ShowtimeSearchRepository {
     }
 
     public List<ShowtimeSummary> search(UUID movieId, String city, String district,
-                                        Instant from, Instant to) {
+                                        Instant from, Instant to, int limit, int offset) {
         MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("limit", limit)
+                .addValue("offset", offset)
                 .addValue("movieId", movieId == null ? null : movieId.toString())
                 .addValue("city", city)
                 .addValue("district", district)

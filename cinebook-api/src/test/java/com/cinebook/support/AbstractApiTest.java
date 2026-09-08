@@ -15,6 +15,9 @@ import org.springframework.web.client.RestClient;
         // voi ung dung that dang chay tren may lap trinh vien.
         properties = {
                 "management.server.port=0",
+                // Bang gia duoc cache co TTL (xem PriceQueryJpa). Mac dinh 10 giay la hop ly
+                // cho ban chay that nhung se lam PriceTableTest phai cho 10 giay.
+                "cinebook.catalog.price-cache-ttl=PT2S",
                 // Test khong co Jaeger: khong tat thi moi lan chay lai co mot chuoi loi
                 // xuat trace that bai, cham va lam nhieu log.
                 "management.tracing.export.enabled=false"

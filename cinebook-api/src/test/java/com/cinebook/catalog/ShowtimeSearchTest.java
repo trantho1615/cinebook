@@ -53,8 +53,14 @@ class ShowtimeSearchTest extends AbstractApiTest {
         createShowtime(phimHanhDong, phongQ7, TOI);
     }
 
+    /**
+     * Ten cu la "tra ve tat ca suat chieu". Tu Milestone 10 cau do khong con dung: /showtimes
+     * co gioi han mac dinh 500 dong. Test nay chi tao vai suat nen van xanh, nhung mot ten
+     * mo ta sai hop dong la mot cai bay cho nguoi doc sau. Gioi han duoc canh boi
+     * ShowtimePaginationTest.
+     */
     @Test
-    void khong_co_bo_loc_thi_tra_ve_tat_ca_suat_chieu() {
+    void khong_co_bo_loc_thi_tra_ve_moi_suat_trong_gioi_han_mac_dinh() {
         var body = search(Map.of());
 
         assertThat(body.size()).isEqualTo(3);

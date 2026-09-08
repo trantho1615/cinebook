@@ -27,13 +27,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@Validated
 public class ShowtimeController {
+
+    /**
+     * Gioi han mac dinh cua /showtimes.
+     *
+     * 500 chu khong phai 50: trang chu goi /showtimes?from=<bay gio> va can du suat chieu
+     * sap toi de hien lich. Dat thap hon la cat cut danh sach trong im lang, mot loi te hon
+     * loi no thay the.
+     */
+    private static final int GIOI_HAN_MAC_DINH = 500;
 
     private final ShowtimeRepository showtimes;
     private final MovieRepository movies;
@@ -61,8 +74,10 @@ public class ShowtimeController {
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String district,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
-        return showtimeSearch.search(movieId, city, district, from, to);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(defaultValue = "500") @Min(1) @Max(1000) int limit,
+            @RequestParam(defaultValue = "0") @Min(0) int offset) {
+        return showtimeSearch.search(movieId, city, district, from, to, limit, offset);
     }
 
     @GetMapping("/showtimes/{id}")
