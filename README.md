@@ -1,37 +1,87 @@
 # cinebook
 
-![CI](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml/badge.svg)](https://github.com/trantho1615/cinebook/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-25%20LTS-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue)
 
-### ▶ Ban chay that: **https://cinebookapp.duckdns.org**
+A cinema ticket booking system built around three problems that CRUD does not solve: **seat
+contention** when many people click at once, **asynchronous payments** whose webhooks arrive
+late or never, and **finding bottlenecks by measurement** rather than by intuition.
 
-Bam **"Dung tai khoan demo"** la dat duoc ve ngay, khong can dang ky. Muon thay phan hay
-nhat: mo **hai cua so** cung mot suat chieu, giu ghe o cua so nay va nhin cua so kia doi mau.
+**Live demo — [cinebookapp.duckdns.org](https://cinebookapp.duckdns.org)**
 
-Cong thanh toan la ban gia lap — khong co tien that o day.
+Sign in with the *Dùng tài khoản demo* (demo account) button; no registration required. To
+see the part that matters, open **two browser windows** on the same showtime, hold a seat in
+one, and watch the other update instantly. The payment gateway is simulated — no real money
+is involved. The user interface is in Vietnamese.
 
----
+![Grafana dashboard captured during a load test](docs/images/grafana-flash-sale.jpg)
 
-He thong dat ve xem phim, Java 25 + Spring Boot 4. Du an tap trung vao ba bai toan **khong
-giai duoc bang CRUD**: tranh chap ghe khi nhieu nguoi cung bam, thanh toan bat dong bo voi
-webhook den tre hoac khong den, va tim diem nghen bang so lieu thay vi bang linh cam.
+## Results
 
-![Dashboard trong luc do tai](docs/images/grafana-flash-sale.jpg)
-
-## Ba con so
-
-| | |
+| Metric | Result |
 |---|---|
-| **200 luong** cung gianh mot ghe | dung **1** thanh cong, 199 nhan 409, **0** loi khac |
-| seat map duoi tai (p95) | **1,05 s → 34 ms** sau khi do va toi uu (30 lan) |
-| **174 test** tren PostgreSQL that | khong dung H2, khong mock database |
+| 200 virtual threads racing for one seat | exactly **1** succeeds, 199 receive `409`, **0** other errors |
+| Seat map p95 under load | **1.05 s → 34 ms** after profiling and optimisation (30×) |
+| Test suite | **174 tests** against real PostgreSQL — no H2, no mocked database |
 
-Moi bat bien quan trong deu co test **da tung thay do**: truoc khi tin mot luoi an toan,
-toi go no ra de xem thu co that su rach khong.
+Every important invariant is covered by a test **that has been observed failing**. Before a
+safety net is trusted here, it is deliberately removed to confirm it actually tears.
 
-## Chay thu tren may minh
+Absolute numbers depend on the machine. The measurement conditions are documented in full
+alongside the results.
 
-Neu chi muon xem thi dung link o dau trang, khong can lam gi ca. Phan nay danh cho ai muon
-chay tren may minh — chi can Docker, khong can cai Java hay Maven.
+## Architecture
+
+```
+                     ┌──────────────────────────────┐
+        browser ─────│   cinebook-api (monolith)    │
+   REST + WebSocket  │  identity │ catalog │ booking │
+ payment gateway ────│  payment  │ notification      │
+        webhook      └───┬──────────┬────────┬───────┘
+                         │          │        │
+                  PostgreSQL 18  Redis 8   Kafka
+                   (source of    (realtime  (outbox relay)
+                     truth)       pub/sub)      │
+                                                ▼
+                                    ┌──────────────────┐
+                                    │ cinebook-worker  │
+                                    │ sweeper, relay,  │
+                                    │ reconciliation,  │
+                                    │ notifications    │
+                                    └──────────────────┘
+```
+
+Two deployable applications. **If the worker dies, tickets can still be sold** — only the
+timeliness of cleanup and notifications is lost. That is not a claim in prose; a test holds
+it in place.
+
+Two architectural rules are enforced at build time rather than by discipline:
+
+- A module may depend only on another module's `api` package — `ModuleBoundaryTest`
+- The worker may not declare a `@RestController` — `WorkerApplicationTest`
+
+**[→ Architecture guide](docs/kien-truc.md)** — six problems, each with its trade-offs, a
+link to the test that proves the solution, and a list of what was deliberately left out.
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Language / framework | Java 25 (LTS), Spring Boot 4.1, Spring Framework 7 |
+| Build | Maven 3.9, multi-module |
+| Database | PostgreSQL 18, Flyway migrations |
+| Cache / pub-sub | Redis 8 |
+| Messaging | Apache Kafka 4.3.1 (KRaft) |
+| Testing | JUnit 5, Testcontainers, AssertJ, ArchUnit, Awaitility |
+| Load testing | k6 |
+| Observability | Micrometer, Prometheus, Grafana, OpenTelemetry, Jaeger |
+| Deployment | Docker Compose, Caddy with automatic HTTPS, AWS EC2 (arm64) |
+
+## Quick start
+
+Docker is the only requirement — no local Java or Maven installation is needed.
 
 ```bash
 git clone https://github.com/trantho1615/cinebook && cd cinebook
@@ -39,62 +89,32 @@ cp .env.example .env
 docker compose --profile full up --build
 ```
 
-Roi mo **http://localhost:8080**, bam "Dung tai khoan demo".
+Then open **http://localhost:8080** and sign in with the demo account button.
 
-| | Dia chi |
+| Service | Address |
 |---|---|
-| UI | http://localhost:8080 |
-| Grafana | http://localhost:3000 (dashboard "cinebook" nap san tu repo) |
+| Application | http://localhost:8080 |
+| Grafana | http://localhost:3000 (the `cinebook` dashboard is provisioned from this repo) |
 | Prometheus | http://localhost:9090 |
 | Jaeger | http://localhost:16686 |
 
-## Kien truc
-
-```
-                     ┌──────────────────────────────┐
-   trinh duyet ──────│   cinebook-api (monolith)    │
-   REST + WebSocket  │  identity │ catalog │ booking │
-   cong thanh toan ──│  payment  │ notification      │
-        webhook      └───┬──────────┬────────┬───────┘
-                         │          │        │
-                  PostgreSQL 18  Redis 8   Kafka
-                    (nguon      (pub/sub   (outbox relay)
-                     su that)    realtime)      │
-                                                ▼
-                                    ┌──────────────────┐
-                                    │ cinebook-worker  │
-                                    │ sweeper, relay,  │
-                                    │ doi soat, email  │
-                                    └──────────────────┘
-```
-
-Hai deployable. **Worker chet thi he thong van ban duoc ve** — chi mat tinh kip thoi cua
-viec don dep va gui thong bao. Do khong phai loi hua suong, co test giu no.
-
-Hai luat kien truc duoc ep o tang build:
-
-- Module chi duoc phu thuoc vao package `api` cua module khac (`ModuleBoundaryTest`)
-- Worker khong duoc khai bao `@RestController` (`WorkerApplicationTest`)
-
-**[→ Doc tai lieu kien truc](docs/kien-truc.md)** — sau van de, moi van de kem link toi test
-chung minh, va danh sach nhung gi co y chua lam.
-
-## Danh cho nguoi muon sua code
+## Development
 
 <details>
-<summary>Chay bang Maven, chay test, do tai</summary>
+<summary>Running from source, tests, and load tests</summary>
 
-### Yeu cau
+### Requirements
 
-| | Ban |
+| | Version |
 |---|---|
-| JDK | 25 (LTS), `JAVA_HOME` phai tro dung |
+| JDK | 25 (LTS), with `JAVA_HOME` set correctly |
 | Maven | 3.9+ |
-| Docker + Compose | bat buoc, ke ca khi chi chay test |
+| Docker + Compose | required, including for running tests |
 
-### Chay khi dang sua code
+### Running while editing
 
-Chi bat ha tang, chay ung dung tu IDE hoac Maven — khong phai build image moi lan:
+Start infrastructure only and run the applications from an IDE or Maven, instead of
+rebuilding images on every change:
 
 ```bash
 docker compose up -d
@@ -103,40 +123,59 @@ mvn -B -pl cinebook-api    spring-boot:run -Dspring-boot.run.profiles=demo   # 8
 mvn -B -pl cinebook-worker spring-boot:run                                   # 8081
 ```
 
-**Build truoc khi chay worker phai la `mvn clean install`, KHONG phai `mvn package`.** Fat
-jar cua worker goi `cinebook-api` lay tu `~/.m2`, nen `package` co the dong goi mot ban api
-cu ma khong bao gi — worker se chay code cu va chi lech hanh vi. Dung moi tien trinh java
-truoc khi `clean`: Windows khoa file jar.
+**Build the worker with `mvn clean install`, not `mvn package`.** The worker's fat jar
+resolves `cinebook-api` from the local Maven repository, so `package` can silently bundle a
+stale copy — the worker then runs old code and only its behaviour drifts. Stop running Java
+processes before `clean`; Windows locks jar files.
 
-### Cong quan tri tach rieng
+### Separate management port
 
-Health va metric nam o **8090** (api) va **8091** (worker), khong phai 8080/8081.
-`/actuator/prometheus` ke ten endpoint, so nguoi dung va nhip giao dich — no thuoc ve mang
-noi bo. Co test khang dinh cong nghiep vu khong lo metric.
+Health and metrics are served on **8090** (api) and **8091** (worker), not on 8080/8081.
+`/actuator/prometheus` exposes endpoint names, user counts and transaction rates, so it
+belongs on an internal network. A test asserts that the business port leaks no metrics.
 
-### Chay test
+### Tests
 
 ```bash
 mvn -B verify
 ```
 
-Integration test chay tren PostgreSQL 18 that qua Testcontainers, **khong dung H2** —
-partial index, `EXCLUDE USING gist` va `FOR UPDATE SKIP LOCKED` la nen tang cua thiet ke nay
-va H2 khong ho tro chung.
+Integration tests run against real PostgreSQL 18 through Testcontainers, **not H2**: partial
+indexes, `EXCLUDE USING gist` and `FOR UPDATE SKIP LOCKED` are the foundation of this design
+and H2 does not support them.
 
-Chay `clean verify` **khi da tat `docker compose`**: da co lan test xanh gia vi
-Redis cua compose dang chay, va CI moi bat duoc.
+Run `clean verify` **with `docker compose` stopped**. A test once passed only because a
+Compose Redis container happened to be running locally, and CI was what caught it.
 
-### Do tai
+### Load testing
 
-Kich ban k6 flash sale: [`load-test/README.md`](load-test/README.md).
-So lieu day du kem dieu kien do: [`docs/ket-qua-do-tai.md`](docs/ket-qua-do-tai.md).
+The k6 flash-sale scenario lives in [`load-test/README.md`](load-test/README.md). Full
+results with measurement conditions are in [`docs/ket-qua-do-tai.md`](docs/ket-qua-do-tai.md).
 
 </details>
 
-## Tai lieu
+## Deployment
 
-- [Kien truc — sau van de va cach giai](docs/kien-truc.md)
-- [Ket qua do tai truoc/sau](docs/ket-qua-do-tai.md)
-- [Chinh sach ve bi mat trong repo](SECURITY.md)
-- [Kich ban do tai bang k6](load-test/README.md)
+The public demo runs on a single AWS EC2 `t4g.medium` (arm64) instance behind Caddy, which
+obtains and renews Let's Encrypt certificates automatically. Infrastructure ports — Postgres,
+Redis, Kafka, Grafana, Prometheus, Jaeger — are closed to the internet and reachable only
+over an SSH tunnel.
+
+The deployed instance runs the `prod,demo` profile: strict about secrets, but with sample
+showtimes and the simulated payment gateway enabled so that visitors have something to click.
+
+## Documentation
+
+- [Architecture guide](docs/kien-truc.md) — six problems and how each was solved
+- [Load test results](docs/ket-qua-do-tai.md) — before/after numbers with measurement conditions
+- [Load test scenario](load-test/README.md) — how to reproduce the numbers
+- [Secrets policy](SECURITY.md) — what the secret-shaped strings in this repository are
+
+> The deep-dive documents are written in Vietnamese.
+
+## Deliberately not implemented
+
+Listed so that their absence reads as a decision rather than an oversight: rate limiting and
+a virtual waiting room, distributed tracing across the outbox boundary, per-query database
+spans, Kubernetes and blue-green deployment, and refresh tokens in `HttpOnly` cookies. The
+reasoning for each is in the [architecture guide](docs/kien-truc.md).
