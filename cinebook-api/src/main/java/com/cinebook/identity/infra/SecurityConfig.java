@@ -42,8 +42,8 @@ public class SecurityConfig {
      * "/**" se nuot ca nhung endpoint chua duoc liet ke o tren no.
      */
     private static final String[] FILE_TINH = {
-            "/", "/index.html", "/seats.html", "/checkout.html",
-            "/css/**", "/js/**", "/favicon.ico"
+            "/", "/index.html",
+            "/css/**", "/js/**", "/vendor/**", "/fonts/**", "/favicon.ico"
     };
 
     private final JwtAuthenticationFilter jwtFilter;

@@ -29,6 +29,8 @@ class HeadRequestTest extends AbstractApiTest {
                 .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(client().head().uri("/css/app.css").retrieve()
                 .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(client().head().uri("/vendor/tailwind.js").retrieve()
+                .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test

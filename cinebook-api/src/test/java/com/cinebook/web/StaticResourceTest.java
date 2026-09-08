@@ -33,4 +33,16 @@ class StaticResourceTest extends AbstractApiTest {
         assertThat(client().get().uri("/admin/users").retrieve()
                 .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
+
+    /**
+     * Milestone 11 chuyen sang SPA: Tailwind va font nam trong repo chu khong goi CDN
+     * ngoai. Chung phai phuc vu duoc cho khach chua dang nhap, neu khong thi trang trang.
+     */
+    @Test
+    void tailwind_va_font_tai_duoc_khong_can_dang_nhap() {
+        assertThat(client().get().uri("/vendor/tailwind.js").retrieve()
+                .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(client().get().uri("/fonts/playfair-display-vietnamese.woff2").retrieve()
+                .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
 }
