@@ -4,10 +4,11 @@ import { datNguoiDung } from "./store.js";
 import { token, get } from "./api.js";
 import * as phim from "./screens/phim.js";
 import * as chiTietPhim from "./screens/chi-tiet-phim.js";
+import * as soDoGhe from "./screens/so-do-ghe.js";
 import * as dangNhap from "./screens/dang-nhap.js";
 import * as khongTimThay from "./screens/khong-tim-thay.js";
 
-const dinhTuyen = { phim, chiTietPhim, dangNhap, khongTimThay };
+const dinhTuyen = { phim, chiTietPhim, soDoGhe, dangNhap, khongTimThay };
 
 async function batDau() {
     document.getElementById("header").append(dungHeader());
