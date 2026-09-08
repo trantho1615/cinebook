@@ -62,6 +62,11 @@ export function render({ id }) {
 
     function veLuoi() {
         const luoi = el.querySelector("#luoi");
+        // Nho ghe dang duoc focus TRUOC khi dung lai luoi. replaceChildren vut bo phan tu
+        // cu, va focus roi ve <body>. Voi nguoi dung ban phim, chon mot ghe roi mat focus
+        // nghia la phai Tab lai tu dau de chon ghe thu hai — dieu do bien phim mui ten
+        // thanh vo dung dung o luc no can dung nhat.
+        const gheDangFocus = document.activeElement?.dataset?.ghe;
         const theoHang = {};
         for (const g of danhSachGhe) (theoHang[g.rowLabel] ??= []).push(g);
 
@@ -93,6 +98,10 @@ export function render({ id }) {
         }
         boc.onkeydown = diChuyenBangPhim;
         luoi.replaceChildren(boc);
+        if (gheDangFocus) {
+            // seatId la uuid nen an toan trong bo chon thuoc tinh.
+            el.querySelector(`#luoi button[data-ghe="${gheDangFocus}"]`)?.focus();
+        }
     }
 
     /**
