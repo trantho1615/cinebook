@@ -42,6 +42,8 @@ class StaticResourceTest extends AbstractApiTest {
     void tailwind_va_font_tai_duoc_khong_can_dang_nhap() {
         assertThat(client().get().uri("/vendor/tailwind.js").retrieve()
                 .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(client().get().uri("/fonts/playfair-display-latin.woff2").retrieve()
+                .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(client().get().uri("/fonts/playfair-display-vietnamese.woff2").retrieve()
                 .toBodilessEntity().getStatusCode()).isEqualTo(HttpStatus.OK);
     }
