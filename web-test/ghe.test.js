@@ -32,7 +32,25 @@ test("da ban: khong chon duoc, khong noi gia", () => {
     assert.equal(t.nhan, "Ghe A5, da ban");
 });
 
-test("dang chon thang trang thai AVAILABLE tu server", () => {
+test("y dinh cua nguoi dung thang khi server con noi AVAILABLE", () => {
     // Nguoi dung vua bam, server chua kip tra ve. Hien thi phai theo y dinh cua ho.
-    assert.equal(thuocTinhGhe({ ...A5, status: "AVAILABLE" }, true).lop, "ghe ghe-toi");
+    const t = thuocTinhGhe(A5, true);
+    assert.equal(t.lop, "ghe ghe-toi");
+    assert.equal(t.chonDuoc, true);
+});
+
+test("server thang khi ghe bi nguoi khac lay mat trong luc dang chon", () => {
+    // Cuoc dua that cua ung dung nay: nguoi dung bam mot ghe, va giua luc do nguoi khac
+    // giu hoac mua mat. Lua chon cu con trong may KHONG duoc de len trang thai that —
+    // neu de, nguoi dung thay ghe van sang mau minh chon va bam thanh toan vao mot ghe
+    // khong con la cua ho.
+    const dangGiu = thuocTinhGhe({ ...A5, status: "HELD" }, true);
+    assert.equal(dangGiu.lop, "ghe ghe-khac");
+    assert.equal(dangGiu.chonDuoc, false);
+    assert.equal(dangGiu.nhan, "Ghe A5, nguoi khac dang giu");
+
+    const daBan = thuocTinhGhe({ ...A5, status: "BOOKED" }, true);
+    assert.equal(daBan.lop, "ghe ghe-ban");
+    assert.equal(daBan.chonDuoc, false);
+    assert.equal(daBan.nhan, "Ghe A5, da ban");
 });
