@@ -2,10 +2,12 @@ import { khoiTao } from "./router.js";
 import { dungHeader } from "./ui/header.js";
 import { datNguoiDung } from "./store.js";
 import { token, get } from "./api.js";
+import * as phim from "./screens/phim.js";
+import * as chiTietPhim from "./screens/chi-tiet-phim.js";
 import * as dangNhap from "./screens/dang-nhap.js";
 import * as khongTimThay from "./screens/khong-tim-thay.js";
 
-const dinhTuyen = { dangNhap, khongTimThay };
+const dinhTuyen = { phim, chiTietPhim, dangNhap, khongTimThay };
 
 async function batDau() {
     document.getElementById("header").append(dungHeader());
