@@ -6,13 +6,17 @@ import { moHopThoai } from "../ui/hopthoai.js";
 import { dungCanhBao } from "../ui/canhbao.js";
 
 let ketNoiHienTai = null;
-// Dat true khi router roi man hinh nay. Can thiet vi hai cau GET dau tien khong huy duoc:
-// neu nguoi dung roi di truoc khi chung tra ve, dung() van chay tren mot phan tu da bi go
-// khoi trang va mo mot WebSocket khong ai con giu tham chieu de dong.
-let daRoi = false;
+// Moi lan vao man hinh la mot LUOT rieng. huyBo() tang so luot, nen moi promise con dang
+// bay cua luot cu tu nhan ra minh da cu.
+//
+// Vi sao khong dung mot co boolean dung chung: co khong phan biet duoc luot nao. Roi man
+// hinh roi quay lai ngay se dat lai co ve false, va promise cua luot TRUOC tuong minh con
+// hieu luc — no chay dung() tren phan tu da go khoi trang va ghi de ketNoiHienTai, khien
+// huyBo() sau do dong nham socket.
+let soLuot = 0;
 
 export function render({ id }) {
-    daRoi = false;
+    const luot = ++soLuot;
     const el = document.createElement("div");
     el.className = "max-w-5xl mx-auto px-4 py-8 pb-32 lg:pb-8";
     el.innerHTML = `<div class="text-chuMo">Dang tai so do ghe...</div>`;
@@ -23,12 +27,12 @@ export function render({ id }) {
 
     Promise.all([get(`/showtimes/${id}`), get(`/showtimes/${id}/seats`)])
         .then(([suat, ghe]) => {
-            if (daRoi) return;
+            if (luot !== soLuot) return;
             danhSachGhe = ghe;
             dung(suat);
         })
         .catch(() => {
-            if (daRoi) return;
+            if (luot !== soLuot) return;
             el.innerHTML =
                 `<div class="serif text-2xl text-center py-20">Khong tim thay suat chieu</div>`;
         });
@@ -81,8 +85,8 @@ export function render({ id }) {
         // thanh vo dung dung o luc no can dung nhat.
         const gheDangFocus = document.activeElement?.dataset?.ghe;
         if (gheDangFocus) gheCoTab = gheDangFocus;
-        const conChonDuoc = (id) => danhSachGhe.some(
-            (g) => g.seatId === id && thuocTinhGhe(g, dangChon.has(id)).chonDuoc);
+        const conChonDuoc = (seatId) => danhSachGhe.some(
+            (g) => g.seatId === seatId && thuocTinhGhe(g, dangChon.has(seatId)).chonDuoc);
         if (!gheCoTab || !conChonDuoc(gheCoTab)) {
             // Ghe giu tab stop vua bi nguoi khac lay mat: chuyen sang ghe chon duoc dau tien.
             gheCoTab = danhSachGhe.find((g) => thuocTinhGhe(g, dangChon.has(g.seatId)).chonDuoc)?.seatId ?? null;
@@ -122,7 +126,10 @@ export function render({ id }) {
         luoi.replaceChildren(boc);
         if (gheDangFocus) {
             // seatId la uuid nen an toan trong bo chon thuoc tinh.
-            el.querySelector(`#luoi button[data-ghe="${gheDangFocus}"]`)?.focus();
+            const cu = el.querySelector(`#luoi button[data-ghe="${gheDangFocus}"]`);
+            // Trinh duyet tu choi focus vao nut disabled: ghe vua bi nguoi khac lay mat thi
+            // focus se roi ve <body>. Dua no ve o dang giu tab stop thay vi de mat cho.
+            (cu && !cu.disabled ? cu : el.querySelector('#luoi button[tabindex="0"]'))?.focus();
         }
     }
 
@@ -215,6 +222,6 @@ export function render({ id }) {
 }
 
 export function huyBo() {
-    daRoi = true;
+    soLuot++;
     if (ketNoiHienTai) { ketNoiHienTai.dong(); ketNoiHienTai = null; }
 }
