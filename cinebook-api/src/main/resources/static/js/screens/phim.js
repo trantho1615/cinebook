@@ -12,7 +12,7 @@ export function render() {
 
     get("/movies?status=NOW_SHOWING")
         .then((ds) => boc.replaceChildren(ds.length ? luoi(ds) : rong()))
-        .catch(() => boc.replaceChildren(loi(() => render())));
+        .catch(() => boc.replaceChildren(loi()));
 
     return el;
 }
@@ -38,7 +38,7 @@ function rong() {
     return el;
 }
 
-function loi(thuLai) {
+function loi() {
     const el = document.createElement("div");
     el.className = "text-center py-20";
     el.innerHTML = `<div class="serif text-2xl">Khong tai duoc danh sach phim</div>

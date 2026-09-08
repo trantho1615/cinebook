@@ -1,12 +1,12 @@
 import { get } from "../api.js";
 import { thoatHtml } from "../an-toan.js";
-import { khoiChu } from "../ui/skeleton.js";
+import { trangChiTietPhim } from "../ui/skeleton.js";
 import { dinhDangTien } from "../ghe.js";
 
 export function render({ id }) {
     const el = document.createElement("div");
     el.className = "max-w-5xl mx-auto px-4 py-8";
-    el.append(khoiChu(4));
+    el.append(trangChiTietPhim());
 
     Promise.all([get(`/movies/${id}`), get(`/showtimes?movieId=${id}&from=${new Date().toISOString()}`)])
         .then(([phim, suat]) => el.replaceChildren(noiDung(phim, suat)))
