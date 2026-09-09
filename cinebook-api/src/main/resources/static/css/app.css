@@ -85,3 +85,16 @@ textarea:focus-visible {
     outline: 2px solid var(--nhan);
     outline-offset: 2px;
 }
+
+/* Trang thai hover cua nut chinh.
+   Mot luat duy nhat thay vi gan hover:bg-nhanDam vao tung the: hom nay co 12 cho dung
+   .bg-nhan, va cho thu 13 se khong ai nho. Do dac hieu cua .bg-nhan:hover (0,2,0) cao hon
+   .bg-nhan (0,1,0) ma Tailwind sinh luc chay, nen luat nay thang bat ke thu tu nap.
+   Day cung la noi duy nhat tieu thu --nhan-dam: truoc do bien nay duoc khai bao o ca hai
+   nguon mau ma khong co mot consumer nao. */
+.bg-nhan { transition: background-color .15s ease; }
+.bg-nhan:hover:not(:disabled) { background-color: var(--nhan-dam); }
+
+/* Nut chinh luc bi vo hieu. Bat buoc phai co ke tu khi giuGhe() vo hieu nut truoc khi POST:
+   mot nut khong doi gi khi bam la mot nut nguoi dung se bam lai. */
+.bg-nhan:disabled { opacity: .55; cursor: not-allowed; }

@@ -28,7 +28,7 @@ Measured on a 12-million-row database, not on demo data.
 | **Throughput** | **2,000 req/s at p95 25.6 ms**; saturates at ~2,300 req/s |
 | **Optimisation** | p95 at 2,000 req/s: **234 ms → 25.6 ms (9.1×)**, ceiling **+21 %** |
 | **Earlier optimisation** | seat map under contention: p95 **1.05 s → 34 ms (30×)** |
-| **Tests** | **182** against real PostgreSQL — no H2, no mocked database |
+| **Tests** | **183** against real PostgreSQL — no H2, no mocked database |
 
 Neither optimisation touched a query. Behind one seat map request sit four SQL statements
 whose combined execution time is **0.104 ms** — while a `SELECT 1` that does nothing at all

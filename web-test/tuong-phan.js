@@ -14,6 +14,9 @@ const CAP = [
     ["thanh cong tren the","#6FCF97", "#131316", 4.5],
     ["so ghe trong",      "#8C8C96", "#26262D", 4.5],
     ["so ghe nguoi khac", "#9A7F4D", "#1E1B14", 4.5],
+    // Trang thai hover cua nut chinh. Mau nen doi tu --nhan sang --nhan-dam khi di chuot qua,
+    // nen day la mot CAP MAU KHAC voi "nen tren nhan" o tren va phai duoc kiem rieng.
+    ["chu nut tren nhan dam (hover)", "#0B0B0D", "#C9963A", 4.5],
 ];
 // Ghe da ban khong co cap nao: no khong hien so. Xem ghi chu o Task 7.
 
