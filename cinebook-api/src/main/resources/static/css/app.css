@@ -1,231 +1,100 @@
-/* CSS viet tay, khong framework: giao dien nay ton tai de quay demo, khong de canh
-   tranh voi mot san pham that. */
+/* Token va nhung lop khong dien dat duoc bang utility cua Tailwind.
+   Moi thu khac viet thang bang class trong HTML. */
 
-:root {
-    --nen: #14161a;
-    --the: #1e2128;
-    --vien: #2c313b;
-    --chu: #e6e8ec;
-    --chu-mo: #9aa1ad;
-    --nhan: #4f8cff;
-
-    --ghe-trong: #2f3742;
-    --ghe-nguoi-khac: #6b4a1f;
-    --ghe-da-ban: #4a2a2a;
-    --ghe-cua-toi: #1f6b3a;
+/* HAI khai bao, khong phai mot.
+   Google Fonts chia font theo khoi ky tu: subset "vietnamese" chi co e-mu, o-mu, u-rau...
+   con chu cai thuong M, a, T, r nam o subset "latin". Gop hai file vao mot @font-face voi
+   mot dai unicode chung se khien trinh duyet tai nham file cho nham ky tu.
+   Dai unicode duoi day chep nguyen van tu CSS cua Google Fonts. */
+@font-face {
+    font-family: "Playfair Display";
+    src: url("/fonts/playfair-display-latin.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+                   U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+                   U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Playfair Display";
+    src: url("/fonts/playfair-display-vietnamese.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+                   U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329,
+                   U+1EA0-1EF9, U+20AB;
 }
 
-* {
-    box-sizing: border-box;
+/* Day la nguon su that cho CSS viet tay o file nay (font-face, .ghe*, focus ring...).
+   index.html co mot tailwind.config mang LAI CUNG cac gia tri nay duoi dang mau Tailwind,
+   de cac lop tien ich (bg-nhan, text-loi...) dung duoc trong HTML. Hai noi, mot bo gia tri:
+   doi mau o day ma khong doi tailwind.config (hoac nguoc lai) la tao ra hai nguon su that
+   lech nhau ma khong ai bao loi. */
+:root {
+    --nen: #0B0B0D;
+    --the: #131316;
+    --the-noi: #1A1A1F;
+    --vien: #232329;
+    --chu: #EDEDF0;
+    --chu-mo: #8A8A94;
+    --nhan: #E8B44A;
+    --nhan-dam: #C9963A;
+    --thanh-cong: #6FCF97;
+    --loi: #F87171;
 }
 
 body {
     margin: 0;
     background: var(--nen);
     color: var(--chu);
-    font: 15px/1.5 system-ui, "Segoe UI", sans-serif;
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-header {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--vien);
-}
+.serif { font-family: "Playfair Display", Georgia, serif; font-weight: 400; }
 
-header h1 {
-    margin: 0;
-    font-size: 1.1rem;
-    letter-spacing: 0.02em;
-}
+/* Moi con so trong ung dung: gia, ma ve, dong ho dem nguoc.
+   Thieu dong nay thi dong ho giat ngang moi giay. */
+.so { font-variant-numeric: tabular-nums; }
 
-#nguoi-dung {
-    margin-left: auto;
-    color: var(--chu-mo);
-    font-size: 0.9rem;
-}
-
-main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 1.5rem;
-}
-
-.dang-tai,
-.trong {
-    color: var(--chu-mo);
-}
-
-.the {
-    background: var(--the);
-    border: 1px solid var(--vien);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-}
-
-label {
-    display: block;
-    margin: 0.75rem 0 0.25rem;
-    color: var(--chu-mo);
-    font-size: 0.85rem;
-}
-
-input {
-    width: 100%;
-    padding: 0.55rem 0.7rem;
-    background: var(--nen);
-    border: 1px solid var(--vien);
-    border-radius: 6px;
-    color: var(--chu);
-    font: inherit;
-}
-
-button {
-    padding: 0.55rem 1rem;
-    background: var(--nhan);
-    border: 0;
-    border-radius: 6px;
-    color: #fff;
-    font: inherit;
-    cursor: pointer;
-}
-
-button.phu {
-    background: transparent;
-    border: 1px solid var(--vien);
-    color: var(--chu);
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.loi {
-    margin: 0.75rem 0;
-    padding: 0.6rem 0.8rem;
-    background: #3a1f1f;
-    border-left: 3px solid #b45252;
-    border-radius: 4px;
-}
-
-/* --- So do ghe (Task 3) --- */
-
-.hang {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-bottom: 0.35rem;
-}
-
-.ten-hang {
-    width: 1.5rem;
-    color: var(--chu-mo);
-    font-size: 0.8rem;
-}
-
+/* Bon trang thai ghe. Phan biet bang BA tin hieu — nen, kieu vien, hoa van —
+   chu khong chi bang mau: nguoi mu mau va anh chup den trang van doc duoc. */
 .ghe {
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    border-radius: 4px;
-    background: var(--ghe-trong);
-    color: var(--chu);
-    font-size: 0.75rem;
-    cursor: pointer;
+    width: 30px; height: 30px; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-variant-numeric: tabular-nums;
+    background: none; padding: 0; cursor: pointer;
+}
+.ghe-trong { background: #26262D; border: 1px solid #33333B; color: #8C8C96; }
+.ghe-toi   { background: var(--nhan); border: 1px solid var(--nhan); color: #1A1200; font-weight: 700; }
+.ghe-khac  { background: #1E1B14; border: 1px dashed #8A6F3D; color: #9A7F4D; cursor: not-allowed; }
+.ghe-ban   {
+    background: #141417; border: 1px solid #202024; color: #3E3E46; cursor: not-allowed;
+    background-image: repeating-linear-gradient(45deg,
+        transparent, transparent 3px, #202024 3px, #202024 4px);
 }
 
-.ghe.nguoi-khac-giu {
-    background: var(--ghe-nguoi-khac);
-    cursor: not-allowed;
+/* Vong focus phai nhin ro tren nen toi. Mac dinh cua trinh duyet khong du.
+   Ke ca o input: mot form dang nhap khong co vong focus ro rang la mot form
+   khong dung duoc bang ban phim. */
+.ghe:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--nhan);
+    outline-offset: 2px;
 }
 
-.ghe.da-ban {
-    background: var(--ghe-da-ban);
-    cursor: not-allowed;
-}
+/* Trang thai hover cua nut chinh.
+   Mot luat duy nhat thay vi gan hover:bg-nhanDam vao tung the: hom nay co 12 cho dung
+   .bg-nhan, va cho thu 13 se khong ai nho. Do dac hieu cua .bg-nhan:hover (0,2,0) cao hon
+   .bg-nhan (0,1,0) ma Tailwind sinh luc chay, nen luat nay thang bat ke thu tu nap.
+   Day cung la noi duy nhat tieu thu --nhan-dam: truoc do bien nay duoc khai bao o ca hai
+   nguon mau ma khong co mot consumer nao. */
+.bg-nhan { transition: background-color .15s ease; }
+.bg-nhan:hover:not(:disabled) { background-color: var(--nhan-dam); }
 
-.ghe.cua-toi {
-    background: var(--ghe-cua-toi);
-}
-
-.ghe.vua-doi {
-    animation: nhay 0.6s ease-out;
-}
-
-@keyframes nhay {
-    from {
-        outline: 2px solid var(--nhan);
-    }
-    to {
-        outline: 2px solid transparent;
-    }
-}
-
-/* --- Man hinh, chu thich va thanh hanh dong --- */
-
-.man-hinh {
-    max-width: 22rem;
-    margin: 0 auto 1.5rem;
-    padding: 0.35rem;
-    background: var(--vien);
-    border-radius: 0 0 40% 40%;
-    color: var(--chu-mo);
-    font-size: 0.75rem;
-    text-align: center;
-}
-
-.chu-thich {
-    display: flex;
-    gap: 1rem;
-    margin: 1rem 0;
-    color: var(--chu-mo);
-    font-size: 0.8rem;
-}
-
-.chu-thich span::before {
-    content: '';
-    display: inline-block;
-    width: 0.8rem;
-    height: 0.8rem;
-    margin-right: 0.35rem;
-    border-radius: 3px;
-    vertical-align: -1px;
-}
-
-.chu-thich .k-trong::before { background: var(--ghe-trong); }
-.chu-thich .k-nguoi-khac::before { background: var(--ghe-nguoi-khac); }
-.chu-thich .k-da-ban::before { background: var(--ghe-da-ban); }
-.chu-thich .k-cua-toi::before { background: var(--ghe-cua-toi); }
-
-.thanh-hanh-dong {
-    position: sticky;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem 1rem;
-    background: var(--the);
-    border: 1px solid var(--vien);
-    border-radius: 8px;
-}
-
-.dem-nguoc {
-    font-variant-numeric: tabular-nums;
-    font-size: 1.1rem;
-}
-
-.dem-nguoc.gap {
-    color: #ff8f6b;
-}
-
-a {
-    color: var(--nhan);
-}
-
-header h1 a {
-    color: inherit;
-    text-decoration: none;
-}
+/* Nut chinh luc bi vo hieu. Bat buoc phai co ke tu khi giuGhe() vo hieu nut truoc khi POST:
+   mot nut khong doi gi khi bam la mot nut nguoi dung se bam lai. */
+.bg-nhan:disabled { opacity: .55; cursor: not-allowed; }

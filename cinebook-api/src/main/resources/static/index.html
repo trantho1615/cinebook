@@ -4,18 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>cinebook</title>
+    <!-- Mau nen dat inline, TRUOC tailwind: Play CDN sinh CSS luc chay nen co mot nhip
+         chua co style, va mot nhip trang loe la thu de nhan thay nhat tren nen toi. -->
+    <style>html,body{background:#0B0B0D;margin:0}</style>
     <link rel="stylesheet" href="/css/app.css">
+    <script src="/vendor/tailwind.js"></script>
+    <script>
+        // Cac gia tri mau o day PHAI khop voi :root trong css/app.css — do la nguon su that,
+        // day chi la ban sao duoi dang mau Tailwind de cac lop tien ich (bg-nhan, text-loi...)
+        // dung duoc trong HTML. Doi mot ben ma khong doi ben kia la tao ra hai nguon su that
+        // lech nhau ma khong ai bao loi.
+        tailwind.config = {
+            theme: { extend: { colors: {
+                nen: "#0B0B0D", the: "#131316", theNoi: "#1A1A1F", vien: "#232329",
+                chu: "#EDEDF0", chuMo: "#8A8A94", nhan: "#E8B44A", nhanDam: "#C9963A",
+                thanhCong: "#6FCF97", loi: "#F87171"
+            } } }
+        };
+    </script>
 </head>
 <body>
-<header>
-    <h1>cinebook</h1>
-    <span id="nguoi-dung"></span>
-</header>
-
-<main id="app">
-    <p class="dang-tai">Dang tai...</p>
-</main>
-
-<script type="module" src="/js/home.js"></script>
+<div id="header"></div>
+<main id="app"></main>
+<script type="module" src="/js/main.js"></script>
 </body>
 </html>

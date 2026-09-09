@@ -30,3 +30,15 @@ jobs:
           name: surefire-reports
           path: '**/target/surefire-reports/*.xml'
           if-no-files-found: ignore
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests
+        run: node --test web-test/*.test.js
+      - name: Contrast check
+        run: node web-test/tuong-phan.js

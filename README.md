@@ -28,7 +28,7 @@ Measured on a 12-million-row database, not on demo data.
 | **Throughput** | **2,000 req/s at p95 25.6 ms**; saturates at ~2,300 req/s |
 | **Optimisation** | p95 at 2,000 req/s: **234 ms → 25.6 ms (9.1×)**, ceiling **+21 %** |
 | **Earlier optimisation** | seat map under contention: p95 **1.05 s → 34 ms (30×)** |
-| **Tests** | **182** against real PostgreSQL — no H2, no mocked database |
+| **Tests** | **183** against real PostgreSQL — no H2, no mocked database |
 
 Neither optimisation touched a query. Behind one seat map request sit four SQL statements
 whose combined execution time is **0.104 ms** — while a `SELECT 1` that does nothing at all
@@ -162,6 +162,18 @@ and H2 does not support them.
 
 Run `clean verify` **with `docker compose` stopped**. A test once passed only because a
 Compose Redis container happened to be running locally, and CI was what caught it.
+
+The front-end has its own checks, run separately from the Maven build:
+
+```bash
+node --test web-test/*.test.js     # router and seat-state mapping
+node web-test/tuong-phan.js        # WCAG AA contrast on the colour tokens
+npx playwright test                # one end-to-end booking flow, needs the app running
+```
+
+The end-to-end scenario is not in CI — it needs Postgres, Redis and the application
+running, which costs more to stand up than one scenario is worth. Run it locally before
+a release.
 
 ### Load testing
 

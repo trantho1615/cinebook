@@ -1,6 +1,8 @@
 // Lop bong duy nhat giua UI va backend. Gan token, tu lam moi phien khi het han, va dich
 // loi cua backend thanh Error co nghia.
 
+import { datTinMotLan } from './store.js';
+
 const KHOA_TOKEN = 'cinebook.token';
 const KHOA_REFRESH = 'cinebook.refresh';
 
@@ -47,6 +49,16 @@ export function get(duongDan) {
 
 export function post(duongDan, than) {
     return goi('POST', duongDan, than ?? {});
+}
+
+export function del(duongDan) {
+    return goi('DELETE', duongDan);
+}
+
+export async function dangKy(email, matKhau, hoTen, dienThoai) {
+    await goi('POST', '/auth/register',
+        { email, password: matKhau, fullName: hoTen, phone: dienThoai });
+    return dangNhap(email, matKhau);
 }
 
 function luuPhien(ketQua) {
@@ -99,8 +111,14 @@ async function goi(phuongThuc, duongDan, than, choPhepLamMoi = true) {
             await lamMoiPhien();
             return goi(phuongThuc, duongDan, than, false);
         } catch {
+            // Truoc day dieu huong bang location.href sang '/index.html?phien=het-han' —
+            // trang duy nhat doc tham so do la home.js, da bi xoa khoi milestone nay. Ket
+            // qua la thong bao "het han" bien mat lang le VA nguoi dung bi tai lai ca trang,
+            // bi hat khoi SPA giua chung mot luong dang lam do. Dieu huong trong ung dung
+            // (hash) giu nguyen SPA con thong bao thi giao cho man hinh dang-nhap.
             dangXuat();
-            location.href = '/index.html?phien=het-han';
+            datTinMotLan('Phien dang nhap da het han. Vui long dang nhap lai.');
+            location.hash = '#/dang-nhap';
             throw new Error('Phien dang nhap da het han');
         }
     }
