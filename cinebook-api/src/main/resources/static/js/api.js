@@ -1,6 +1,8 @@
 // Lop bong duy nhat giua UI va backend. Gan token, tu lam moi phien khi het han, va dich
 // loi cua backend thanh Error co nghia.
 
+import { datTinMotLan } from './store.js';
+
 const KHOA_TOKEN = 'cinebook.token';
 const KHOA_REFRESH = 'cinebook.refresh';
 
@@ -115,6 +117,7 @@ async function goi(phuongThuc, duongDan, than, choPhepLamMoi = true) {
             // bi hat khoi SPA giua chung mot luong dang lam do. Dieu huong trong ung dung
             // (hash) giu nguyen SPA con thong bao thi giao cho man hinh dang-nhap.
             dangXuat();
+            datTinMotLan('Phien dang nhap da het han. Vui long dang nhap lai.');
             location.hash = '#/dang-nhap';
             throw new Error('Phien dang nhap da het han');
         }

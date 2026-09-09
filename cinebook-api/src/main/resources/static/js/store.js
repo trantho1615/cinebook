@@ -14,3 +14,13 @@ export function theoDoi(fn) {
     nguoiNghe.add(fn);
     return () => nguoiNghe.delete(fn);
 }
+
+/**
+ * Thong bao mot lan cho man hinh ke tiep.
+ *
+ * api.js dat khi phien het han; man hinh dang-nhap doc VA xoa. Doc mot lan roi mat la co y:
+ * bam F5 o trang dang nhap khong nen hien lai mot canh bao da cu.
+ */
+let _tinMotLan = null;
+export function datTinMotLan(tin) { _tinMotLan = tin; }
+export function layTinMotLan() { const t = _tinMotLan; _tinMotLan = null; return t; }

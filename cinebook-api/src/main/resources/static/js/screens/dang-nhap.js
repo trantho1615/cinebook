@@ -1,5 +1,5 @@
 import { dangNhap, dangNhapDemo, dangKy, get } from "../api.js";
-import { datNguoiDung } from "../store.js";
+import { datNguoiDung, layTinMotLan } from "../store.js";
 
 export function render() {
     const el = document.createElement("div");
@@ -25,6 +25,11 @@ export function render() {
 
     const loi = el.querySelector("#loi");
     function baoLoi(tin) { loi.textContent = tin; loi.classList.remove("hidden"); }
+
+    // Phien het han giua chung mot luong thi api.js da dat lai mot cau giai thich. Khong co
+    // no, nguoi dung bi bat len day ma khong hieu vi sao.
+    const tinCu = layTinMotLan();
+    if (tinCu) baoLoi(tinCu);
 
     async function vaoUngDung() {
         datNguoiDung(await get("/auth/me"));

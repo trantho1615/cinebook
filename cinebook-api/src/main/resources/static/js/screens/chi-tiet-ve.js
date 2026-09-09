@@ -40,10 +40,16 @@ export function render({ id }) {
                 // Khong co try/catch o day truoc: mot loi mang de nut o trang thai disabled
                 // vinh vien va man hinh khong noi gi ca.
                 nut.disabled = false;
-                const bao = document.createElement("p");
-                bao.className = "text-loi text-sm mt-3 text-center";
+                // Dung lai o CHO CU thay vi them mot the moi: nguoi dung bam huy ba lan
+                // that bai thi phai thay mot dong bao loi, khong phai ba dong chong len nhau.
+                let bao = el.querySelector("#loi-huy");
+                if (!bao) {
+                    bao = document.createElement("p");
+                    bao.id = "loi-huy";
+                    bao.className = "text-loi text-sm mt-3 text-center";
+                    nut.after(bao);
+                }
                 bao.textContent = e.message ?? "Khong huy duoc don. Thu lai.";
-                nut.after(bao);
                 return;
             }
             // Kiem tra sau await: router co the da thay man hinh nay bang man hinh khac

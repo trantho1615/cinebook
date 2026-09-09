@@ -27,6 +27,14 @@ export function render({ id }) {
     let danhSachGhe = [];
     const dangChon = new Set();
     let gheCoTab = null;   // Ghe duy nhat nam trong chuoi Tab (roving tabindex).
+    // Dang co mot yeu cau giu ghe bay tren duong day.
+    //
+    // Co nay KHONG duoc song trong thuoc tinh disabled cua nut: veTomTat() dung lai toan bo
+    // #tomtat bang innerHTML, va no chay lai moi lan nguoi dung chon them ghe VA moi lan co
+    // tin realtime tu nguoi khac. Nut moi sinh ra khong con disabled, nen ghi co vao DOM la
+    // ghi vao mot thu se bi xoa giua chung — trong mot suat chieu dong nguoi thi tin realtime
+    // toi lien tuc, nen duong nay de xay ra hon ca bam dup.
+    let dangGui = false;
 
     Promise.all([get(`/showtimes/${id}`), get(`/showtimes/${id}/seats`)])
         .then(([suat, ghe]) => {
@@ -210,20 +218,28 @@ export function render({ id }) {
             <span class="so text-nhan text-lg font-semibold">${dinhDangTien(tong)}d</span></div>
           <button id="giu" class="mt-3 w-full bg-nhan text-nen font-bold py-2.5 rounded-md border-0 cursor-pointer">
             Giu ${chon.length} ghe</button>`;
-        t.querySelector("#giu").onclick = () => giuGhe([...dangChon]);
+        const nutGiu = t.querySelector("#giu");
+        nutGiu.disabled = dangGui;
+        nutGiu.onclick = () => giuGhe([...dangChon]);
+    }
+
+    function capNhatNutGiu() {
+        const nut = el.querySelector("#giu");
+        if (nut) nut.disabled = dangGui;
     }
 
     async function giuGhe(seatIds) {
-        const nut = el.querySelector("#giu");
-        if (nut) nut.disabled = true;                 // Chan bam dup: POST thu hai se an
-                                                      // 409 cho chinh ghe minh vua giu duoc.
+        if (dangGui) return;                          // POST thu hai se an 409 cho chinh
+        dangGui = true;                               // nhung ghe minh vua giu duoc, roi mo
+        capNhatNutGiu();                              // hop thoai "mat ghe" de len thanh toan.
         try {
             const don = await post(`/showtimes/${id}/holds`, { seatIds });
             if (luot !== soLuot) return;              // Nguoi dung da roi man hinh.
             location.hash = `#/thanh-toan/${don.bookingId}`;
         } catch (e) {
             if (luot !== soLuot) return;
-            if (nut) nut.disabled = false;
+            dangGui = false;
+            capNhatNutGiu();
             // Backend da dung san cau day du: SeatsUnavailableException sinh ra
             //   "Cac ghe sau da co nguoi giu: D5, D6"
             // va BookingExceptionHandler dua no vao ApiError.message.
