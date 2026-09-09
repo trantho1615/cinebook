@@ -2,6 +2,7 @@ import { get, post } from "../api.js";
 import { thoatHtml } from "../an-toan.js";
 import { dinhDangTien } from "../ghe.js";
 import { moHopThoai } from "../ui/hopthoai.js";
+import { theDonHang } from "../ui/skeleton.js";
 
 let dongHo = null;
 let doiKetQua = null;
@@ -11,13 +12,18 @@ export function render({ id }) {
     const luot = ++soLuot;
     const el = document.createElement("div");
     el.className = "max-w-md mx-auto px-4 py-10";
-    el.innerHTML = `<div class="text-chuMo">Dang tai don...</div>`;
+    el.append(theDonHang());
 
     get(`/bookings/${id}`)
         .then((don) => { if (luot === soLuot) dung(don); })
         .catch(() => {
             if (luot !== soLuot) return;
-            el.innerHTML = `<div class="serif text-2xl text-center py-20">Khong tim thay don</div>`;
+            el.innerHTML = `
+              <div class="text-center py-20">
+                <div class="serif text-2xl">Khong tim thay don</div>
+                <a href="#/ve-cua-toi" class="inline-block mt-5 bg-nhan text-nen font-bold
+                   px-4 py-2 rounded-md no-underline">Ve cua toi</a>
+              </div>`;
         });
 
     function dung(don) {
@@ -124,18 +130,32 @@ export function render({ id }) {
      * Webhook la bat dong bo — no co the toi muon. Hoi lai thay vi bat nguoi dung bam F5.
      */
     function doiXacNhan(don) {
-        doiKetQua = setInterval(async () => {
-            if (luot !== soLuot) { clearInterval(doiKetQua); doiKetQua = null; return; }
-            const moi = await get(`/bookings/${don.bookingId}`);
+        // Bat id cua CHINH interval nay vao bien cuc bo "nhip", khong dua vao doiKetQua
+        // (bien cap module). huyBo() co the da dat lai doiKetQua cho man hinh KE TIEP truoc
+        // khi mot tick cu con dang bay chay xong — clearInterval(doiKetQua) luc do se huy
+        // nham dong ho cua man hinh sau, con dong ho cua chinh no thi chay mai khong dung.
+        const nhip = setInterval(async () => {
+            if (luot !== soLuot) { clearInterval(nhip); return; }
+            let moi;
+            try {
+                moi = await get(`/bookings/${don.bookingId}`);
+            } catch {
+                // Mot lan hoi that bai khong phai ly do de bo cuoc: webhook van co the toi.
+                // Nhung de exception thoat ra khoi callback cua setInterval thi thanh
+                // unhandled rejection, va nguoi dung ngoi mai o "Dang cho cong thanh toan".
+                return;
+            }
             // Kiem LAI sau await: huyBo() co the da chay trong luc cau nay dang bay. Dieu
             // huong tu mot man hinh nguoi dung da roi la keo ho di khoi cho ho dang dung —
             // te hon mot ro ri, vi no cuop quyen dieu khien.
-            if (luot !== soLuot) return;
+            if (luot !== soLuot) { clearInterval(nhip); return; }
             if (moi.status === "CONFIRMED") {
-                clearInterval(doiKetQua); doiKetQua = null;
+                clearInterval(nhip);
+                doiKetQua = null;
                 location.hash = `#/ve/${don.bookingId}`;
             }
         }, 1000);
+        doiKetQua = nhip;
     }
 
     function demNguoc(hetHan) {

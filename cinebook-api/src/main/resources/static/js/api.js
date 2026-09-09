@@ -109,8 +109,13 @@ async function goi(phuongThuc, duongDan, than, choPhepLamMoi = true) {
             await lamMoiPhien();
             return goi(phuongThuc, duongDan, than, false);
         } catch {
+            // Truoc day dieu huong bang location.href sang '/index.html?phien=het-han' —
+            // trang duy nhat doc tham so do la home.js, da bi xoa khoi milestone nay. Ket
+            // qua la thong bao "het han" bien mat lang le VA nguoi dung bi tai lai ca trang,
+            // bi hat khoi SPA giua chung mot luong dang lam do. Dieu huong trong ung dung
+            // (hash) giu nguyen SPA con thong bao thi giao cho man hinh dang-nhap.
             dangXuat();
-            location.href = '/index.html?phien=het-han';
+            location.hash = '#/dang-nhap';
             throw new Error('Phien dang nhap da het han');
         }
     }

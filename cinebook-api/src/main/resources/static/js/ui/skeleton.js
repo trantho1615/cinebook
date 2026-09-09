@@ -15,6 +15,21 @@ export function luoiPhim(soThe = 8) {
     return el;
 }
 
+/** Khung xuong cua the don hang tren man hinh thanh toan va chi tiet ve. */
+export function theDonHang() {
+    const el = document.createElement("div");
+    el.innerHTML = `
+      <div class="${NHAP_NHAY} h-8 w-40 mb-5"></div>
+      <div class="bg-the border border-vien rounded-lg p-4">
+        <div class="${NHAP_NHAY} h-3.5 mb-3"></div>
+        <div class="${NHAP_NHAY} h-3.5 mb-3"></div>
+        <div class="${NHAP_NHAY} h-5 w-32 ml-auto"></div>
+      </div>
+      <div class="${NHAP_NHAY} h-16 rounded-lg my-4"></div>
+      <div class="${NHAP_NHAY} h-11 rounded-md"></div>`;
+    return el;
+}
+
 export function khoiChu(soDong = 3) {
     const el = document.createElement("div");
     el.className = "flex flex-col gap-2";

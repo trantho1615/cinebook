@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { phanGiai } from "../cinebook-api/src/main/resources/static/js/router.js";
+import { phanGiai, CAN_DANG_NHAP } from "../cinebook-api/src/main/resources/static/js/router.js";
 
 test("hash rong tra ve man hinh phim dang chieu", () => {
     assert.deepEqual(phanGiai(""), { ten: "phim", thamSo: {} });
@@ -22,4 +22,13 @@ test("tuyen khong tham so", () => {
 test("hash khong khop tra ve 404 chu khong nem loi", () => {
     assert.deepEqual(phanGiai("#/khong-co-tuyen-nay"), { ten: "khongTimThay", thamSo: {} });
     assert.deepEqual(phanGiai("#/phim"), { ten: "khongTimThay", thamSo: {} });
+});
+
+test("CAN_DANG_NHAP chi chan cac man hinh can biet danh tinh nguoi dung", () => {
+    for (const ten of ["veCuaToi", "chiTietVe", "thanhToan"]) {
+        assert.ok(CAN_DANG_NHAP.has(ten), `${ten} phai can dang nhap`);
+    }
+    for (const ten of ["phim", "chiTietPhim", "soDoGhe", "dangNhap"]) {
+        assert.ok(!CAN_DANG_NHAP.has(ten), `${ten} khong duoc can dang nhap`);
+    }
 });

@@ -25,6 +25,11 @@
                    U+1EA0-1EF9, U+20AB;
 }
 
+/* Day la nguon su that cho CSS viet tay o file nay (font-face, .ghe*, focus ring...).
+   index.html co mot tailwind.config mang LAI CUNG cac gia tri nay duoi dang mau Tailwind,
+   de cac lop tien ich (bg-nhan, text-loi...) dung duoc trong HTML. Hai noi, mot bo gia tri:
+   doi mau o day ma khong doi tailwind.config (hoac nguoc lai) la tao ra hai nguon su that
+   lech nhau ma khong ai bao loi. */
 :root {
     --nen: #0B0B0D;
     --the: #131316;

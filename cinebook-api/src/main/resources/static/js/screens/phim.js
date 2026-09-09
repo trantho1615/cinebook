@@ -21,11 +21,11 @@ function luoi(ds) {
     const el = document.createElement("div");
     el.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5";
     el.innerHTML = ds.map((p) => `
-      <a href="#/phim/${p.id}" class="no-underline text-chu group">
+      <a href="#/phim/${thoatHtml(p.id)}" class="no-underline text-chu group">
         <div class="aspect-[2/3] rounded-md bg-gradient-to-br from-[#2E2E38] to-[#141418]
                     group-hover:ring-1 group-hover:ring-nhan transition"></div>
         <div class="mt-2.5 text-sm leading-snug">${thoatHtml(p.title)}</div>
-        <div class="text-chuMo text-xs mt-0.5">${p.durationMin} phut · ${p.ageRating}</div>
+        <div class="text-chuMo text-xs mt-0.5">${thoatHtml(p.durationMin)} phut · ${thoatHtml(p.ageRating)}</div>
       </a>`).join("");
     return el;
 }

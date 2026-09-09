@@ -1,11 +1,12 @@
 import { get, del } from "../api.js";
 import { thoatHtml } from "../an-toan.js";
 import { dinhDangTien } from "../ghe.js";
+import { theDonHang } from "../ui/skeleton.js";
 
 export function render({ id }) {
     const el = document.createElement("div");
     el.className = "max-w-md mx-auto px-4 py-10";
-    el.innerHTML = `<div class="text-chuMo">Dang tai ve...</div>`;
+    el.append(theDonHang());
 
     get(`/bookings/${id}`).then((v) => {
         el.innerHTML = `
@@ -33,7 +34,18 @@ export function render({ id }) {
         const nut = el.querySelector("#huy");
         if (nut) nut.onclick = async () => {
             nut.disabled = true;
-            await del(`/bookings/${id}`);
+            try {
+                await del(`/bookings/${id}`);
+            } catch (e) {
+                // Khong co try/catch o day truoc: mot loi mang de nut o trang thai disabled
+                // vinh vien va man hinh khong noi gi ca.
+                nut.disabled = false;
+                const bao = document.createElement("p");
+                bao.className = "text-loi text-sm mt-3 text-center";
+                bao.textContent = e.message ?? "Khong huy duoc don. Thu lai.";
+                nut.after(bao);
+                return;
+            }
             // Kiem tra sau await: router co the da thay man hinh nay bang man hinh khac
             // trong luc cho xoa. Dieu huong luc do se cuop quyen dieu khien tu nguoi dung,
             // dung nhu loi da sua trong thanh-toan.js.
@@ -41,7 +53,12 @@ export function render({ id }) {
             location.hash = "#/ve-cua-toi";
         };
     }).catch(() => {
-        el.innerHTML = `<div class="serif text-2xl text-center py-20">Khong tim thay ve</div>`;
+        el.innerHTML = `
+          <div class="text-center py-20">
+            <div class="serif text-2xl">Khong tim thay ve</div>
+            <a href="#/ve-cua-toi" class="inline-block mt-5 bg-nhan text-nen font-bold
+               px-4 py-2 rounded-md no-underline">Ve cua toi</a>
+          </div>`;
     });
 
     return el;

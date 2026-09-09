@@ -10,9 +10,16 @@ export function render() {
     boc.append(khoiChu(3));
     el.append(boc);
 
-    get("/bookings")
-        .then((ds) => boc.replaceChildren(ds.length ? danhSach(ds) : rong()))
-        .catch(() => { boc.innerHTML = `<p class="text-chuMo">Khong tai duoc danh sach ve.</p>`; });
+    // Ham rieng de nut "Thu lai" trong loi() goi lai duoc dung PHEP nay, thay vi
+    // location.reload() tai lai ca trang — mot loi mang thoang qua khong dang bi day ra
+    // khoi SPA.
+    function tai() {
+        boc.replaceChildren(khoiChu(3));
+        get("/bookings")
+            .then((ds) => boc.replaceChildren(ds.length ? danhSach(ds) : rong()))
+            .catch(() => boc.replaceChildren(loi(tai)));
+    }
+    tai();
 
     return el;
 }
@@ -31,7 +38,7 @@ function danhSach(ds) {
     el.innerHTML = ds.map((v) => {
         const [ten, lop] = MAU_TRANG_THAI[v.status] ?? [v.status, "border-vien text-chuMo"];
         const cu = v.status !== "CONFIRMED" && v.status !== "PENDING";
-        return `<a href="#/ve/${v.bookingId}"
+        return `<a href="#/ve/${thoatHtml(v.bookingId)}"
                    class="flex gap-3 bg-the border border-vien rounded-lg p-3 no-underline text-chu
                           ${cu ? "opacity-60" : ""} hover:border-nhan transition">
           <div class="w-10 aspect-[2/3] rounded bg-gradient-to-br from-[#2E2E38] to-[#141418]"></div>
@@ -53,5 +60,16 @@ function rong() {
       <p class="text-chuMo mt-2">Ve ban dat se hien o day.</p>
       <a href="#/" class="inline-block mt-5 bg-nhan text-nen font-bold px-4 py-2 rounded-md no-underline">
         Xem phim dang chieu</a>`;
+    return el;
+}
+
+function loi(thuLai) {
+    const el = document.createElement("div");
+    el.className = "text-center py-20";
+    el.innerHTML = `<div class="serif text-2xl">Khong tai duoc danh sach ve</div>
+      <p class="text-chuMo mt-2">Kiem tra ket noi roi thu lai.</p>
+      <button class="mt-5 border border-vien text-chu px-4 py-2 rounded-md bg-transparent cursor-pointer">
+        Thu lai</button>`;
+    el.querySelector("button").onclick = thuLai;
     return el;
 }

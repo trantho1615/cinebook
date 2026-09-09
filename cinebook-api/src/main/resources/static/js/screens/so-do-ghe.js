@@ -4,6 +4,7 @@ import { thuocTinhGhe, dinhDangTien } from "../ghe.js";
 import { ketNoi } from "../realtime.js";
 import { moHopThoai } from "../ui/hopthoai.js";
 import { dungCanhBao } from "../ui/canhbao.js";
+import { khoiChu } from "../ui/skeleton.js";
 
 let ketNoiHienTai = null;
 // Moi lan vao man hinh la mot LUOT rieng. huyBo() tang so luot, nen moi promise con dang
@@ -19,7 +20,9 @@ export function render({ id }) {
     const luot = ++soLuot;
     const el = document.createElement("div");
     el.className = "max-w-5xl mx-auto px-4 py-8 pb-32 lg:pb-8";
-    el.innerHTML = `<div class="text-chuMo">Dang tai so do ghe...</div>`;
+    // khoiChu(3): noi dung sap toi la mot khoi tieu de (ten phim, rap, gio chieu), khong
+    // phai luoi hay the — thanh phang la trung thuc voi hinh dang that o day.
+    el.append(khoiChu(3));
 
     let danhSachGhe = [];
     const dangChon = new Set();
@@ -33,8 +36,12 @@ export function render({ id }) {
         })
         .catch(() => {
             if (luot !== soLuot) return;
-            el.innerHTML =
-                `<div class="serif text-2xl text-center py-20">Khong tim thay suat chieu</div>`;
+            el.innerHTML = `
+              <div class="text-center py-20">
+                <div class="serif text-2xl">Khong tim thay suat chieu</div>
+                <a href="#/" class="inline-block mt-5 bg-nhan text-nen font-bold
+                   px-4 py-2 rounded-md no-underline">Ve trang chu</a>
+              </div>`;
         });
 
     function dung(suat) {
@@ -61,10 +68,18 @@ export function render({ id }) {
         veTomTat();
 
         ketNoiHienTai = ketNoi(id, {
-            khiGheDoi: () => get(`/showtimes/${id}/seats`).then((moi) => {
+            // tin.seats la danh sach NHAN ghe vua doi trang thai (SeatMapChannel.seatsChanged).
+            // Neu no vao thang mot chuoi co dinh, hau het trinh doc man hinh khong doc lai
+            // textContent giong het lan truoc — chi lan doi dau tien duoc noi thanh tieng.
+            khiGheDoi: (tin) => get(`/showtimes/${id}/seats`).then((moi) => {
+                if (luot !== soLuot) return;
                 danhSachGhe = moi;
                 veLuoi();
-                el.querySelector("#thongbao").textContent = "So do ghe vua duoc cap nhat";
+                veTomTat();
+                const ten = (tin?.seats ?? []).join(", ");
+                el.querySelector("#thongbao").textContent = ten
+                    ? `Ghe ${ten} vua doi trang thai`
+                    : "So do ghe vua duoc cap nhat";
             }),
             khiMatKetNoi: () => el.querySelector("#canhbao").replaceChildren(dungCanhBao({
                 tieuDe: "Mat ket noi realtime",
@@ -125,8 +140,10 @@ export function render({ id }) {
         boc.onkeydown = diChuyenBangPhim;
         luoi.replaceChildren(boc);
         if (gheDangFocus) {
-            // seatId la uuid nen an toan trong bo chon thuoc tinh.
-            const cu = el.querySelector(`#luoi button[data-ghe="${gheDangFocus}"]`);
+            // gheDangFocus noi thang vao bo chon CSS: escape de mot dau nhay khong lam
+            // querySelector nem SyntaxError va sap ca luoi ghe. La uuid hom nay khong bao
+            // dam mai mai the.
+            const cu = el.querySelector(`#luoi button[data-ghe="${CSS.escape(gheDangFocus)}"]`);
             // Trinh duyet tu choi focus vao nut disabled: ghe vua bi nguoi khac lay mat thi
             // focus se roi ve <body>. Dua no ve o dang giu tab stop thay vi de mat cho.
             (cu && !cu.disabled ? cu : el.querySelector('#luoi button[tabindex="0"]'))?.focus();
@@ -144,15 +161,23 @@ export function render({ id }) {
         const nut = [...el.querySelectorAll("#luoi button")];
         const i = nut.indexOf(document.activeElement);
         if (i < 0) return;
-        const soCot = el.querySelectorAll('#luoi [role="row"]')[0].children.length;
+        const hang = el.querySelectorAll('#luoi [role="row"]');
+        const soCot = hang[0].children.length;
         const buoc = e.key in huong ? huong[e.key] : (e.key === "ArrowDown" ? soCot : -soCot);
-        const ke = nut[i + buoc];
-        if (ke) {
-            document.activeElement.tabIndex = -1;
-            ke.tabIndex = 0;
-            gheCoTab = ke.dataset.ghe;
-            ke.focus();
-        }
+
+        // Bo qua ghe khong chon duoc. Nut disabled KHONG nhan duoc focus, nen neu chi nhay
+        // mot buoc roi goi focus() thi con tro dung yen — ma tabIndex thi da chuyen di roi.
+        // Nguoi dung bi ket vinh vien o canh mot ghe da ban, va do la truong hop binh thuong
+        // trong mot rap chieu chu khong phai truong hop hiem.
+        let j = i + buoc;
+        while (nut[j] && nut[j].disabled) j += buoc;
+        const ke = nut[j];
+        if (!ke) return;
+
+        document.activeElement.tabIndex = -1;
+        ke.tabIndex = 0;
+        gheCoTab = ke.dataset.ghe;
+        ke.focus();
     }
 
     function doiChon(seatId) {
@@ -189,10 +214,16 @@ export function render({ id }) {
     }
 
     async function giuGhe(seatIds) {
+        const nut = el.querySelector("#giu");
+        if (nut) nut.disabled = true;                 // Chan bam dup: POST thu hai se an
+                                                      // 409 cho chinh ghe minh vua giu duoc.
         try {
             const don = await post(`/showtimes/${id}/holds`, { seatIds });
+            if (luot !== soLuot) return;              // Nguoi dung da roi man hinh.
             location.hash = `#/thanh-toan/${don.bookingId}`;
         } catch (e) {
+            if (luot !== soLuot) return;
+            if (nut) nut.disabled = false;
             // Backend da dung san cau day du: SeatsUnavailableException sinh ra
             //   "Cac ghe sau da co nguoi giu: D5, D6"
             // va BookingExceptionHandler dua no vao ApiError.message.
@@ -209,9 +240,18 @@ export function render({ id }) {
                 than: thoatHtml(e.message ?? "Ban chon lai ghe khac nhe."),
                 nhan: "Chon lai",
                 khiBam: () => {
-                    dangChon.clear();
+                    // Server chi tra ve mot cau van, khong co danh sach co cau truc. Doi
+                    // chieu theo nhan ghe de giu lai nhung ghe nguoi dung VAN con — xoa sach
+                    // la bat ho chon lai tu dau, dung dieu spec phan doi.
                     get(`/showtimes/${id}/seats`).then((moi) => {
-                        danhSachGhe = moi; veLuoi(); veTomTat();
+                        danhSachGhe = moi;
+                        for (const g of moi) {
+                            if (dangChon.has(g.seatId) && g.status !== "AVAILABLE") {
+                                dangChon.delete(g.seatId);
+                            }
+                        }
+                        veLuoi();
+                        veTomTat();
                     });
                 },
             });

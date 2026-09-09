@@ -23,7 +23,7 @@ async function batDau() {
     if (token()) {
         try { datNguoiDung(await get("/auth/me")); } catch { /* token het han, coi nhu chua dang nhap */ }
     }
-    khoiTao(dinhTuyen, document.getElementById("app"));
+    khoiTao(dinhTuyen, document.getElementById("app"), () => Boolean(token()));
 }
 
 batDau();

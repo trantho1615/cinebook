@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="/css/app.css">
     <script src="/vendor/tailwind.js"></script>
     <script>
+        // Cac gia tri mau o day PHAI khop voi :root trong css/app.css — do la nguon su that,
+        // day chi la ban sao duoi dang mau Tailwind de cac lop tien ich (bg-nhan, text-loi...)
+        // dung duoc trong HTML. Doi mot ben ma khong doi ben kia la tao ra hai nguon su that
+        // lech nhau ma khong ai bao loi.
         tailwind.config = {
             theme: { extend: { colors: {
                 nen: "#0B0B0D", the: "#131316", theNoi: "#1A1A1F", vien: "#232329",
@@ -21,7 +25,7 @@
 </head>
 <body>
 <div id="header"></div>
-<div id="app"></div>
+<main id="app"></main>
 <script type="module" src="/js/main.js"></script>
 </body>
 </html>
